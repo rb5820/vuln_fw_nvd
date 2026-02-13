@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Sync Log List View -->
+    <record id="view_nvd_sync_log_tree" model="ir.ui.view">
+        <field name="name">vuln.fw.nvd.sync.log.list</field>
+        <field name="model">vuln.fw.nvd.sync.log</field>
+        <field name="arch" type="xml">
+            <list string="NVD Sync Logs" default_order="sync_date desc">
+                <field name="sync_date"/>
+                <field name="status" widget="badge" 
+                       decoration-success="status == 'success'"
+                       decoration-danger="status == 'error'"
+                       decoration-warning="status == 'partial'"/>
+                <field name="total_processed"/>
+                <field name="created_count"/>
+                <field name="updated_count"/>
+                <field name="message"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Sync Log Form View -->
+    <record id="view_nvd_sync_log_form" model="ir.ui.view">
+        <field name="name">vuln.fw.nvd.sync.log.form</field>
+        <field name="model">vuln.fw.nvd.sync.log</field>
+        <field name="arch" type="xml">
+            <form string="NVD Sync Log" create="false" edit="false">
+                <header>
+                    <field name="status" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="sync_date"/>
+                            <field name="status"/>
+                            <field name="total_processed"/>
+                        </group>
+                        <group>
+                            <field name="created_count"/>
+                            <field name="updated_count"/>
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                        </group>
+                    </group>
+                    <group string="Details">
+                        <field name="message" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Sync Log Search View -->
+    <record id="view_nvd_sync_log_search" model="ir.ui.view">
+        <field name="name">vuln.fw.nvd.sync.log.search</field>
+        <field name="model">vuln.fw.nvd.sync.log</field>
+        <field name="arch" type="xml">
+            <search string="Search Sync Logs">
+                <field name="sync_date"/>
+                <field name="status"/>
+                <filter string="Success" name="success" domain="[('status', '=', 'success')]"/>
+                <filter string="Error" name="error" domain="[('status', '=', 'error')]"/>
+                <filter string="Today" name="today" domain="[('sync_date', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="This Week" name="this_week" 
+                        domain="[('sync_date', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                <filter string="Date" name="group_date" context="{'group_by': 'sync_date:day'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Sync Log Action -->
+    <record id="action_nvd_sync_log" model="ir.actions.act_window">
+        <field name="name">Sync Logs</field>
+        <field name="res_model">vuln.fw.nvd.sync.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_empty_folder">
+                No synchronization logs yet
+            </p>
+            <p>
+                Sync logs will appear here after NVD synchronization operations are performed.
+                Use the NVD Importers to start synchronization and generate logs.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item for Sync Logs -->
+    <menuitem 
+        id="menu_nvd_sync_logs"
+        name="📋 Sync Logs"
+        parent="menu_nvd_reporting"
+        action="action_nvd_sync_log"
+        sequence="10"/>
+
+</odoo>

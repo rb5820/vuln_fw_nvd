@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- NVD Importer Form View -->
+    <record id="view_nvd_connector_form" model="ir.ui.view">
+        <field name="name">nvd.connector.form</field>
+        <field name="model">vuln.fw.nvd.connector</field>
+        <field name="arch" type="xml">
+            <form string="NVD Connector">
+                <header>
+                    <button name="action_sync_sample" type="object" string="Sample Sync (10)" 
+                            class="btn-secondary" icon="fa-download"
+                            confirm="This will synchronize 10 sample records from NVD. Continue?"/>
+                    <button name="action_sync_nvd" type="object" string="Full Sync" 
+                            class="btn-primary" icon="fa-refresh"
+                            confirm="This will start full synchronization with the NVD database. Continue?"/>
+                    <field name="active" widget="boolean_toggle"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="NVD Importer Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="api_url" placeholder="https://services.nvd.nist.gov/rest/json/cves/2.0"/>
+                            <field name="api_key" password="True"/>
+                            <field name="batch_size"/>
+                            <field name="auto_sync"/>
+                        </group>
+                        <group>
+                            <field name="last_sync_date"/>
+                            <field name="sync_interval" invisible="not auto_sync"/>
+                            <field name="sync_log_count"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Notes" name="notes">
+                            <field name="notes" placeholder="Additional configuration notes..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter />
+            </form>
+        </field>
+    </record>
+
+    <!-- NVD Connector List View -->
+    <record id="view_nvd_connector_list" model="ir.ui.view">
+        <field name="name">nvd.connector.list</field>
+        <field name="model">vuln.fw.nvd.connector</field>
+        <field name="arch" type="xml">
+            <list string="NVD Importers">
+                <field name="name"/>
+                <field name="last_sync_date"/>
+                <field name="sync_log_count"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- NVD Importer Search View -->
+    <record id="view_nvd_connector_search" model="ir.ui.view">
+        <field name="name">nvd.connector.search</field>
+        <field name="model">vuln.fw.nvd.connector</field>
+        <field name="arch" type="xml">
+            <search string="Search NVD Importers">
+                <field name="name"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter string="Auto Sync" name="auto_sync" domain="[('auto_sync', '=', True)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- NVD Importer Action -->
+    <record id="action_nvd_connector" model="ir.actions.act_window">
+        <field name="name">NVD Connectors</field>
+        <field name="res_model">vuln.fw.nvd.connector</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first NVD Importer
+            </p>
+            <p>
+                Set up NVD (National Vulnerability Database) importers to automatically 
+                synchronize vulnerability data from NIST into your Odoo system.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item for NVD Connectors -->
+    <menuitem 
+        id="menu_nvd_connectors"
+        name="🔗 NVD Connectors"
+        parent="menu_nvd_config"
+        action="action_nvd_connector"
+        sequence="10"/>
+
+</odoo>

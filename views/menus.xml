@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Main NVD Menu -->
+    <menuitem 
+        id="menu_nvd_root"
+        name="NVD Vulnerability"
+        sequence="50"
+        web_icon="vuln_fw_nvd,static/description/icon.png"/>
+    
+    <!-- Configuration Menu -->
+    <menuitem 
+        id="menu_nvd_config"
+        name="⚙️ Configuration"
+        parent="menu_nvd_root"
+        sequence="100"/>
+    
+    <!-- Operations Menu -->
+    <menuitem 
+        id="menu_nvd_operations"
+        name="🔄 Operations"
+        parent="menu_nvd_root"
+        sequence="50"/>
+    
+    <!-- Reporting Menu -->
+    <menuitem 
+        id="menu_nvd_reporting"
+        name="📊 Reporting"
+        parent="menu_nvd_root"
+        sequence="75"/>
+
+</odoo>

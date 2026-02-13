@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_vuln_fw_nvd_connector_user,vuln.fw.nvd.connector.user,model_vuln_fw_nvd_connector,group_nvd_user,1,0,0,0
+access_vuln_fw_nvd_connector_manager,vuln.fw.nvd.connector.manager,model_vuln_fw_nvd_connector,group_nvd_manager,1,1,1,1
+access_vuln_fw_nvd_connector_admin,vuln.fw.nvd.connector.admin,model_vuln_fw_nvd_connector,base.group_system,1,1,1,1
+access_nvd_sync_log_user,vuln.fw.nvd.sync.log.user,model_vuln_fw_nvd_sync_log,group_nvd_user,1,0,0,0
+access_nvd_sync_log_manager,vuln.fw.nvd.sync.log.manager,model_vuln_fw_nvd_sync_log,group_nvd_manager,1,1,1,1
+access_nvd_sync_log_admin,vuln.fw.nvd.sync.log.admin,model_vuln_fw_nvd_sync_log,base.group_system,1,1,1,1

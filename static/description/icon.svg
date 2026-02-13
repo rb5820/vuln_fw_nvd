@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="nvdGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1976D2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0D47A1;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="dataGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#42A5F5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1976D2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="128" height="128" rx="16" fill="url(#nvdGradient)"/>
+  
+  <!-- NVD Database representation -->
+  <rect x="20" y="30" width="88" height="68" rx="8" fill="url(#dataGradient)" stroke="#FFFFFF" stroke-width="2"/>
+  
+  <!-- Server/Database icon -->
+  <ellipse cx="64" cy="45" rx="25" ry="6" fill="#FFFFFF" opacity="0.9"/>
+  <rect x="39" y="39" width="50" height="12" fill="#FFFFFF" opacity="0.9"/>
+  <ellipse cx="64" cy="39" rx="25" ry="6" fill="#FFFFFF"/>
+  
+  <!-- API connection lines -->
+  <path d="M30 55 Q35 50 40 55 Q45 60 50 55" stroke="#FFFFFF" stroke-width="2" fill="none" opacity="0.8"/>
+  <path d="M78 55 Q83 50 88 55 Q93 60 98 55" stroke="#FFFFFF" stroke-width="2" fill="none" opacity="0.8"/>
+  
+  <!-- CVE data points -->
+  <circle cx="45" cy="70" r="3" fill="#FFD54F"/>
+  <circle cx="64" cy="75" r="3" fill="#FFD54F"/>
+  <circle cx="83" cy="70" r="3" fill="#FFD54F"/>
+  
+  <!-- NVD text -->
+  <text x="64" y="115" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#FFFFFF">NVD</text>
+  
+  <!-- Connection arrows -->
+  <path d="M20 85 L35 85" stroke="#FFFFFF" stroke-width="2" marker-end="url(#arrowhead)" opacity="0.7"/>
+  <path d="M93 85 L108 85" stroke="#FFFFFF" stroke-width="2" marker-end="url(#arrowhead)" opacity="0.7"/>
+  
+  <!-- Arrow marker -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#FFFFFF"/>
+    </marker>
+  </defs>
+</svg>

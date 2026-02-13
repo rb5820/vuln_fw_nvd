@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Demo NVD Importer -->
+        <record id="demo_nvd_connector" model="vuln.fw.nvd.connector">
+            <field name="name">Demo NVD Importer</field>
+            <field name="framework_id" ref="vuln_fw_core.demo_source_nvd"/>
+            <field name="active">True</field>
+        </record>
+        
+        <!-- Demo Sync Log -->
+        <record id="demo_sync_log" model="vuln.fw.nvd.sync.log">
+            <field name="sync_date" eval="DateTime.now()"/>
+            <field name="status">success</field>
+            <field name="total_processed">150</field>
+            <field name="created_count">45</field>
+            <field name="updated_count">105</field>
+            <field name="error_count">0</field>
+            <field name="duration">12.5</field>
+            <field name="message">Successfully synchronized 150 CVEs from NVD</field>
+        </record>
+    </data>
+</odoo>

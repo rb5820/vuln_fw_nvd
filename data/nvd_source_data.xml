@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- NVD Source Data -->
+    <record id="source_nvd" model="vulnerability.framework">
+        <field name="name">National Vulnerability Database</field>
+        <field name="code">NVD</field>
+        <field name="description">NIST National Vulnerability Database - Official source for CVE vulnerability data</field>
+        <field name="source_type">nvd</field>
+        <field name="url">https://nvd.nist.gov/</field>
+        <field name="api_url">https://services.nvd.nist.gov/rest/json/cves/2.0</field>
+        <field name="active">True</field>
+        <field name="auto_sync">False</field>
+        <field name="sync_interval">24</field>
+        <field name="reliability_score">1.0</field>
+        <field name="priority">1</field>
+        <field name="data_format">json</field>
+    </record>
+</odoo>

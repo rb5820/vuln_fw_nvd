@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Base NVD security configuration -->
+
+    <!-- Categories and groups for NVD management  -->
+    <record id="module_vuln_fw_nvd_category" model="ir.module.category">
+        <field name="name">NVD Vulnerability Database</field>
+        <field name="description">Permissions for NVD vulnerability database management</field>
+        <field name="sequence">30</field>
+    </record>
+    
+    <!-- NVD User Group -->
+    <record id="group_nvd_user" model="res.groups">
+        <field name="name">NVD User</field>
+        <field name="category_id" ref="module_vuln_fw_nvd_category"/>
+        <field name="comment">Users can view NVD vulnerabilities and synchronization logs.</field>
+    </record>
+    
+    <!-- NVD Manager Group -->
+    <record id="group_nvd_manager" model="res.groups">
+        <field name="name">NVD Manager</field>
+        <field name="category_id" ref="module_vuln_fw_nvd_category"/>
+        <field name="implied_ids" eval="[(4, ref('group_nvd_user'))]"/>
+        <field name="comment">Users can manage NVD source configuration, synchronization, and data.</field>
+    </record>
+    
+
+    
+    <!-- Record Rules for NVD-specific models -->
+    <!-- <record id="nvd_connector_company_rule" model="ir.rule">
+        <field name="name">NVD Connector Company Rule</field>
+        <field name="model_id" ref="model_vuln_fw_nvd_connector"/>
+        <field name="groups" eval="[(4, ref('group_vuln_fw_nvd_manager'))]"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="nvd_sync_log_company_rule" model="ir.rule">
+        <field name="name">NVD Sync Log Company Rule</field>
+        <field name="model_id" ref="model_vuln_fw_nvd_sync_log"/>
+        <field name="groups" eval="[(4, ref('group_vuln_fw_nvd_manager'))]"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record> -->
+</odoo>
