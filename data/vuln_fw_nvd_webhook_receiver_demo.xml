@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data >
+        
+        <!-- ============================================================ -->
+        <!-- Demo NVD Inbound Webhook Receiver Configuration              -->
+        <!-- ============================================================ -->
+        <!-- 
+            This demo receiver shows how to configure an inbound webhook
+            endpoint to receive vulnerability data from external systems
+            or other NVD data sources.
+            
+            Webhook URL format:
+            /webhook/nvd/{receiver_id}/{webhook_token}
+        -->
+        
+        <record id="vuln_fw_nvd_webhook_receiver_demo_nvd" model="vuln.fw.nvd.webhook.receiver">
+            <field name="name">🔵 Demo: National Vulnerability Database  External Feed</field>
+            <field name="description">Demo inbound webhook receiver for NVD vulnerability data. Receives CVE/CPE updates from external sources or partner systems.</field>
+            <field name="active">True</field>
+            <field name="webhook_token">demo-nvd-webhook-token-secure-12345678</field>
+            <field name="allowed_sources">192.168.1.0/24,10.0.0.0/8</field>
+            <field name="validate_signature">True</field>
+        </record>
+        
+        <!-- ============================================================ -->
+        <!-- Demo NVD Webhook Receiver - CPE Dictionary Updates           -->
+        <!-- ============================================================ -->
+        <!-- 
+            This receiver is configured to process CPE dictionary updates
+            from external sources, auto-creating vendors and products.
+        -->
+        
+        <record id="vuln_fw_nvd_cpe_receiver_demo_cpe23" model="vuln.fw.nvd.cpe.webhook.receiver">
+            <field name="name">🟢 Demo: CPE 2.3 Parser</field>
+            <field name="description">Demo webhook receiver for CPE 2.3 formatted entries. Automatically parses and creates CPE dictionary records.</field>
+            <field name="active">True</field>
+            <field name="webhook_token">demo-cpe-webhook-token-secure-87654321</field>
+            <field name="parse_cpe_name">True</field>
+            <field name="auto_create_dictionary">True</field>
+            <field name="auto_update_dictionary">False</field>
+            <field name="merge_with_existing">True</field>
+            <field name="create_missing_vendors">True</field>
+            <field name="skip_deprecated">False</field>
+            <field name="batch_size">100</field>
+        </record>
+        
+        <!-- ============================================================ -->
+        <!-- Demo Webhook Payload Queue - Example Entries                 -->
+        <!-- ============================================================ -->
+        <!-- 
+            These demo queue entries show example webhook payloads in
+            different processing states (pending, success, error, etc.)
+        -->
+        
+        <record id="vuln_fw_nvd_webhook_payload_queue_demo_pending" model="vuln.fw.nvd.webhook.payload.queue">
+            <field name="receiver_id" ref="vuln_fw_nvd_webhook_receiver_demo_nvd"/>
+            <field name="state">pending</field>
+            <field name="priority">0</field>
+            <field name="payload">{"cveId": "CVE-2026-0001", "description": "Demo vulnerability entry", "cvssScore": 8.5, "baseMetricV3": {"cvssV3": {"baseScore": 8.5, "baseSeverity": "HIGH"}}}</field>
+            <field name="source_ip">192.168.1.100</field>
+            <field name="signature">demo-signature-hash-pending</field>
+            <field name="tags">demo,pending,nvd</field>
+        </record>
+        
+        <record id="vuln_fw_nvd_webhook_payload_queue_demo_success" model="vuln.fw.nvd.webhook.payload.queue">
+            <field name="receiver_id" ref="vuln_fw_nvd_webhook_receiver_demo_nvd"/>
+            <field name="state">success</field>
+            <field name="priority">10</field>
+            <field name="payload">{"cveId": "CVE-2026-0002", "description": "Successfully processed vulnerability", "cvssScore": 7.2}</field>
+            <field name="source_ip">192.168.1.101</field>
+            <field name="signature">demo-signature-hash-success</field>
+            <field name="tags">demo,success,processed</field>
+            <field name="processing_completed" eval="datetime.datetime.now()"/>
+            <field name="process_result">{"status": "created", "vulnerability_id": 12345, "severity": "HIGH"}</field>
+        </record>
+        
+        <record id="vuln_fw_nvd_webhook_payload_queue_demo_error" model="vuln.fw.nvd.webhook.payload.queue">
+            <field name="receiver_id" ref="vuln_fw_nvd_webhook_receiver_demo_nvd"/>
+            <field name="state">error</field>
+            <field name="priority">5</field>
+            <field name="payload">{"cveId": "CVE-2026-0003", "malformed": true}</field>
+            <field name="source_ip">192.168.1.102</field>
+            <field name="signature">demo-signature-hash-error</field>
+            <field name="tags">demo,error,validation_failed</field>
+            <field name="retry_count">2</field>
+            <field name="error_message">Invalid CVE format: missing required fields (description, cvssScore)</field>
+        </record>
+        
+        <record id="vuln_fw_nvd_webhook_payload_queue_demo_manual_review" model="vuln.fw.nvd.webhook.payload.queue">
+            <field name="receiver_id" ref="vuln_fw_nvd_webhook_receiver_demo_nvd"/>
+            <field name="state">manual_review</field>
+            <field name="priority">15</field>
+            <field name="payload">{"cveId": "CVE-2026-0004", "criticality": "CRITICAL", "affectedProducts": ["unknown-vendor/unknown-product"]}</field>
+            <field name="source_ip">192.168.1.103</field>
+            <field name="signature">demo-signature-hash-review</field>
+            <field name="tags">demo,manual_review,unknown_vendor</field>
+            <field name="error_message">Unknown vendor detected: 'unknown-vendor'. Flagged for manual review to verify product information.</field>
+        </record>
+        
+        <record id="vuln_fw_nvd_webhook_payload_queue_demo_retry" model="vuln.fw.nvd.webhook.payload.queue">
+            <field name="receiver_id" ref="vuln_fw_nvd_cpe_receiver_demo_cpe23"/>
+            <field name="state">retry</field>
+            <field name="priority">3</field>
+            <field name="payload">{"cpeUri": "cpe:2.3:a:apache:log4j:2.14.1:*:*:*:*:*:*:*", "vendor": "apache", "product": "log4j", "version": "2.14.1"}</field>
+            <field name="source_ip">192.168.1.104</field>
+            <field name="signature">demo-signature-hash-retry</field>
+            <field name="tags">demo,retry,cpe,apache</field>
+            <field name="retry_count">1</field>
+            <field name="error_message">Temporary database lock - will retry automatically</field>
+        </record>
+        
+        <record id="vuln_fw_nvd_webhook_payload_queue_demo_ignored" model="vuln.fw.nvd.webhook.payload.queue">
+            <field name="receiver_id" ref="vuln_fw_nvd_webhook_receiver_demo_nvd"/>
+            <field name="state">ignored</field>
+            <field name="priority">0</field>
+            <field name="payload">{"type": "heartbeat", "timestamp": "2026-02-14T00:00:00Z", "status": "healthy"}</field>
+            <field name="source_ip">192.168.1.105</field>
+            <field name="signature">demo-signature-hash-ignored</field>
+            <field name="tags">demo,ignored,heartbeat</field>
+            <field name="process_result">Heartbeat/health check - no processing required</field>
+        </record>
+        
+    </data>
+</odoo>

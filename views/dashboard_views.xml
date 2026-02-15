@@ -55,14 +55,6 @@
                                         <span t-if="record.active.raw_value" class="badge badge-success">Active</span>
                                         <span t-else="" class="badge badge-secondary">Inactive</span>
                                     </div>
-                                    <div class="oe_kanban_bottom_right">
-                                        <button name="action_sync_sample" type="object" class="btn btn-secondary btn-sm mr-1">
-                                            <i class="fa fa-download"/> Sample (10)
-                                        </button>
-                                        <button name="action_sync_nvd" type="object" class="btn btn-primary btn-sm">
-                                            <i class="fa fa-refresh"/> Full Sync
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                         </div>

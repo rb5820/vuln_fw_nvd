@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Base Webhook Receiver Form View -->
+        <record id="vuln_fw_nvd_webhook_receiver_form" model="ir.ui.view">
+            <field name="name">NVD Webhook Receiver Form</field>
+            <field name="model">vuln.fw.nvd.webhook.receiver</field>
+            <field name="arch" type="xml">
+                <form string="Webhook Receiver">
+                    <sheet>
+                        <div class="alert alert-info" role="alert">
+                            <strong>⬇️ Inbound Webhook Receiver</strong> - Receives and processes incoming webhook data
+                        </div>
+                        
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" placeholder="Receiver Name"/>
+                            </h1>
+                        </div>
+                        
+                        <field name="description" placeholder="Description..."/>
+                        
+                        <notebook>
+                            <!-- Security Settings -->
+                            <page string="Security" name="security">
+                                <group>
+                                    <group string="Token">
+                                        <field name="webhook_token" password="True" widget="char"/>
+                                        <field name="validate_signature" widget="boolean_toggle"/>
+                                    </group>
+                                    
+                                    <group string="Access Control">
+                                        <field name="allowed_sources" placeholder="192.168.1.1, 10.0.0.0/8, ..."/>
+                                    </group>
+                                </group>
+                                
+                                <separator string="Webhook Endpoint"/>
+                                <p>
+                                    <strong>URL:</strong> <code>/webhook/receive/<field name="webhook_token" readonly="1"/></code><br/>
+                                    <strong>Method:</strong> POST<br/>
+                                    <strong>Headers:</strong> Content-Type: application/json, X-Webhook-Signature (optional)
+                                </p>
+                            </page>
+                            
+                            <!-- Statistics -->
+                            <page string="Statistics" name="stats">
+                                <group string="Statistics">
+                                    <field name="total_received"/>
+                                    <field name="successful_processed"/>
+                                    <field name="failed_processed"/>
+                                    <field name="last_received"/>
+                                    <field name="last_status"/>
+                                </group>
+                                
+                                <separator string="Last Error"/>
+                                <field name="last_error" readonly="1"/>
+                                
+                                <separator string="Received Webhooks"/>
+                                <field name="receiver_log_ids" readonly="1" nolabel="1"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Webhook Receiver List View -->
+        <record id="vuln_fw_nvd_webhook_receiver_list" model="ir.ui.view">
+            <field name="name">NVD Inbound Webhook Receivers</field>
+            <field name="model">vuln.fw.nvd.webhook.receiver</field>
+            <field name="arch" type="xml">
+                <list string="Inbound Webhook Receivers" decoration-danger="last_status == 'error'" decoration-success="last_status == 'success'">
+                    <field name="name"/>
+                    <field name="active" widget="boolean"/>
+                    <field name="webhook_token"/>
+                    <field name="validate_signature" widget="boolean"/>
+                    <field name="last_received"/>
+                    <field name="last_status"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Webhook Receiver Search View -->
+        <record id="vuln_fw_nvd_webhook_receiver_search" model="ir.ui.view">
+            <field name="name">NVD Inbound Webhook Receiver Search</field>
+            <field name="model">vuln.fw.nvd.webhook.receiver</field>
+            <field name="arch" type="xml">
+                <search string="Webhook Receiver Search">
+                    <field name="name" string="Receiver Name"/>
+                    <filter name="active" string="Active" domain="[('active', '=', True)]"/>
+                    <filter name="inactive" string="Inactive" domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <filter name="signature" string="Signature Validation" domain="[('validate_signature', '=', True)]"/>
+                    <separator/>
+                    <filter name="success" string="Last Success" domain="[('last_status', '=', 'success')]"/>
+                    <filter name="error" string="Last Error" domain="[('last_status', '=', 'error')]"/>
+                    <group expand="0" string="Group By">
+                        <filter name="by_status" string="Status" context="{'group_by': 'last_status'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Webhook Receiver Log List View -->
+        <record id="vuln_fw_nvd_webhook_receiver_log_list" model="ir.ui.view">
+            <field name="name">NVD Webhook Receiver Log List</field>
+            <field name="model">vuln.fw.nvd.webhook.receiver.log</field>
+            <field name="arch" type="xml">
+                <list string="Received Webhooks" decoration-danger="status == 'error'" decoration-success="status == 'success'">
+                    <field name="create_date"/>
+                    <field name="receiver_id"/>
+                    <field name="source_ip"/>
+                    <field name="status"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Webhook Receiver Log Form View -->
+        <record id="vuln_fw_nvd_webhook_receiver_log_form" model="ir.ui.view">
+            <field name="name">NVD Webhook Receiver Log Form</field>
+            <field name="model">vuln.fw.nvd.webhook.receiver.log</field>
+            <field name="arch" type="xml">
+                <form string="Webhook Received" readonly="1">
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="receiver_id"/>
+                            </h1>
+                        </div>
+                        
+                        <group>
+                            <group string="Event Information">
+                                <field name="create_date"/>
+                                <field name="source_ip"/>
+                            </group>
+                            <group string="Status">
+                                <field name="status" widget="badge" decoration-danger="status == 'error'" decoration-success="status == 'success'"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Payload">
+                                <field name="payload" widget="ace" options="{'mode': 'json'}" nolabel="1"/>
+                            </page>
+                            <page string="Error">
+                                <field name="error_message" nolabel="1"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

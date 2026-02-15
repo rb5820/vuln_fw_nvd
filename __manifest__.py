@@ -30,8 +30,15 @@
         'security/ir.model.access.csv',
         'views/menus.xml',
         'views/vuln_fw_nvd_connector_views.xml',
+        'views/vuln_fw_nvd_reference_views.xml',
         'views/vuln_fw_nvd_sync_log_views.xml',
+        'views/vuln_fw_nvd_webhook_views.xml',
+        'views/vuln_fw_nvd_webhook_receiver_views.xml',
+        'views/vuln_fw_nvd_webhook_payload_queue_views.xml',
         'views/dashboard_views.xml',
+        'data/ir_cron.xml',
+        #
+        'data/vuln_fw_nvd_api_connector.xml',
     ],
     'demo': [
         'demo/nvd_demo.xml',

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">
-        <!-- Demo NVD Importer -->
+    <data>
+        <!-- Demo NVD Connector -->
         <record id="demo_nvd_connector" model="vuln.fw.nvd.connector">
-            <field name="name">Demo NVD Importer</field>
+            <field name="name">Demo National Vulnerability Database Connector</field>
             <field name="framework_id" ref="vuln_fw_core.demo_source_nvd"/>
             <field name="active">True</field>
         </record>

@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Base Webhook Form View -->
+        <record id="vuln_fw_nvd_webhook_form" model="ir.ui.view">
+            <field name="name">NVD Webhook Form</field>
+            <field name="model">vuln.fw.nvd.webhook</field>
+            <field name="arch" type="xml">
+                <form string="Webhook Configuration">
+                    <header>
+                        <button name="test_webhook" string="🧪 Test Webhook" type="object" 
+                                class="btn-primary" invisible="webhook_type != 'outbound'"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" placeholder="Webhook Name"/>
+                            </h1>
+                        </div>
+                        
+                        <notebook>
+                            <!-- Basic Configuration -->
+                            <page string="Configuration" name="config">
+                                <group>
+                                    <group string="Basic Settings">
+                                        <field name="webhook_type"/>
+                                        <field name="active" widget="boolean_toggle"/>
+                                        <field name="company_id"/>
+                                    </group>
+                                    
+                                    <group string="Target" invisible="webhook_type != 'outbound'">
+                                        <field name="target_url"/>
+                                        <field name="http_method"/>
+                                    </group>
+                                </group>
+                            </page>
+                            
+                            <!-- Authentication -->
+                            <page string="Authentication" name="auth">
+                                <group>
+                                    <group string="Authentication Type">
+                                        <field name="auth_type"/>
+                                    </group>
+                                    
+                                    <group string="API Key" invisible="auth_type != 'api_key'">
+                                        <field name="api_key"/>
+                                        <field name="api_key_header"/>
+                                    </group>
+                                    
+                                    <group string="Bearer Token" invisible="auth_type != 'bearer'">
+                                        <field name="bearer_token"/>
+                                    </group>
+                                    
+                                    <group string="Basic Authentication" invisible="auth_type != 'basic'">
+                                        <field name="basic_auth_user"/>
+                                        <field name="basic_auth_password" password="True"/>
+                                    </group>
+                                    
+                                    <group string="OAuth2" invisible="auth_type != 'oauth2'">
+                                        <field name="client_id"/>
+                                        <field name="client_secret"/>
+                                    </group>
+                                </group>
+                            </page>
+                            
+                            <!-- Triggers -->
+                            <page string="Triggers" name="triggers" invisible="webhook_type != 'outbound'">
+                                <group string="Trigger Settings">
+                                    <field name="trigger_on_create" widget="boolean_toggle"/>
+                                    <field name="trigger_on_write" widget="boolean_toggle"/>
+                                    <field name="trigger_on_delete" widget="boolean_toggle"/>
+                                </group>
+                                
+                                <separator string="Custom Headers"/>
+                                <group>
+                                    <field name="custom_headers" widget="ace" options="{'mode': 'json'}" nolabel="1"/>
+                                </group>
+                            </page>
+                            
+                            <!-- Statistics & Logs -->
+                            <page string="Statistics &amp; Logs" name="stats">
+                                <group string="Statistics">
+                                    <field name="total_triggers"/>
+                                    <field name="successful_triggers"/>
+                                    <field name="failed_triggers"/>
+                                    <field name="last_triggered"/>
+                                    <field name="last_status"/>
+                                </group>
+                                
+                                <separator string="Last Error"/>
+                                <field name="last_error" readonly="1"/>
+                                
+                                <separator string="Webhook Logs"/>
+                                <field name="webhook_log_ids" readonly="1" nolabel="1"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Webhook List View -->
+        <record id="vuln_fw_nvd_webhook_list" model="ir.ui.view">
+            <field name="name">NVD Webhook List</field>
+            <field name="model">vuln.fw.nvd.webhook</field>
+            <field name="arch" type="xml">
+                <list string="Webhooks" decoration-danger="last_status == 'error'" decoration-success="last_status == 'success'">
+                    <field name="name"/>
+                    <field name="webhook_type"/>
+                    <field name="target_url"/>
+                    <field name="active" widget="boolean"/>
+                    <field name="last_triggered"/>
+                    <field name="last_status"/>
+                    <field name="total_triggers"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Webhook Search View -->
+        <record id="vuln_fw_nvd_webhook_search" model="ir.ui.view">
+            <field name="name">NVD Webhook Search</field>
+            <field name="model">vuln.fw.nvd.webhook</field>
+            <field name="arch" type="xml">
+                <search string="Webhook Search">
+                    <field name="name" string="Webhook Name"/>
+                    <filter name="active" string="Active" domain="[('active', '=', True)]"/>
+                    <filter name="inactive" string="Inactive" domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <filter name="outbound" string="Outbound" domain="[('webhook_type', '=', 'outbound')]"/>
+                    <filter name="inbound" string="Inbound" domain="[('webhook_type', '=', 'inbound')]"/>
+                    <separator/>
+                    <filter name="success" string="Last Success" domain="[('last_status', '=', 'success')]"/>
+                    <filter name="error" string="Last Error" domain="[('last_status', '=', 'error')]"/>
+                    <group expand="0" string="Group By">
+                        <filter name="by_type" string="Type" context="{'group_by': 'webhook_type'}"/>
+                        <filter name="by_status" string="Status" context="{'group_by': 'last_status'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Webhook Log List View -->
+        <record id="vuln_fw_nvd_webhook_log_list" model="ir.ui.view">
+            <field name="name">NVD Webhook Log List</field>
+            <field name="model">vuln.fw.nvd.webhook.log</field>
+            <field name="arch" type="xml">
+                <list string="Webhook Logs" decoration-danger="status == 'error'" decoration-success="status == 'success'">
+                    <field name="create_date"/>
+                    <field name="webhook_id"/>
+                    <field name="event_type"/>
+                    <field name="status"/>
+                    <field name="status_code"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Webhook Log Form View -->
+        <record id="vuln_fw_nvd_webhook_log_form" model="ir.ui.view">
+            <field name="name">NVD Webhook Log Form</field>
+            <field name="model">vuln.fw.nvd.webhook.log</field>
+            <field name="arch" type="xml">
+                <form string="Webhook Log" readonly="1">
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="webhook_id"/>
+                            </h1>
+                        </div>
+                        
+                        <group>
+                            <group string="Event Information">
+                                <field name="create_date"/>
+                                <field name="event_type"/>
+                            </group>
+                            <group string="Response">
+                                <field name="status" widget="badge" decoration-danger="status == 'error'" decoration-success="status == 'success'"/>
+                                <field name="status_code"/>
+                                <field name="duration_ms"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Request Payload">
+                                <field name="request_payload" widget="ace" options="{'mode': 'json'}" nolabel="1"/>
+                            </page>
+                            <page string="Response">
+                                <field name="response_body" widget="ace" nolabel="1"/>
+                            </page>
+                            <page string="Error">
+                                <field name="error_message" nolabel="1"/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

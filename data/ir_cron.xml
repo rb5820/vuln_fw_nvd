@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Scheduled Job: Process Webhook Payload Queue -->
+        <record id="ir_cron_webhook_payload_queue" model="ir.cron">
+            <field name="name">Process Webhook Payload Queue</field>
+            <field name="model_id" ref="model_vuln_fw_nvd_webhook_payload_queue"/>
+            <field name="state">code</field>
+            <field name="code">model.process_pending_payloads(batch_size=100, time_limit=3600)</field>
+            <field name="interval_number">5</field>
+            <field name="interval_type">minutes</field>
+            <field name="user_id" ref="base.user_root"/>
+            <field name="active">True</field>
+            <field name="priority">10</field>
+        </record>
+        
+    </data>
+</odoo>

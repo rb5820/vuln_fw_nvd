@@ -16,11 +16,14 @@ class NvdConnector(models.Model):
     _description = 'NVD API Connector'
     _inherit = ['mail.thread']
     _check_company_auto = True
+    _sql_constraints = [
+        ('unique_api_key', 'UNIQUE(api_key)', 'An NVD connector with this API key already exists. Only one connector per API key is allowed for rate limiting management.')
+    ]
     
     name = fields.Char(
-        string='Importer Name',
+        string='Connector Name',
         required=True,
-        default='NVD Importer'
+        default='NVD Connector'
     )
     
     api_key = fields.Char(
@@ -30,14 +33,20 @@ class NvdConnector(models.Model):
     
     api_url = fields.Char(
         string='API URL',
-        default='https://services.nvd.nist.gov/rest/json/cves/2.0',
-        help='Base URL for the NVD CVE API endpoint (can be customized for different data sources)'
+        default='https://services.nvd.nist.gov/rest/json',
+        help='Base URL for the NVD API endpoint (can be extended for CVEs, CPEs, etc.)'
     )
     
     active = fields.Boolean(
         string='Active',
         default=True,
-        help='Enable/disable this importer'
+        help='Archive this connector'
+    )
+    
+    connector_active = fields.Boolean(
+        string='Connector Active',
+        default=True,
+        help='Enable/disable scheduled sync for this connector (independent of archive status)'
     )
     
     last_sync_date = fields.Datetime(
@@ -68,6 +77,47 @@ class NvdConnector(models.Model):
         help='Additional configuration notes'
     )
     
+    debug_mode = fields.Boolean(
+        string='Debug Mode',
+        default=True,
+        store=True,
+        copy=False,
+        help='Enable detailed debug logging for troubleshooting. When enabled, all processing steps '
+             'will be logged with timestamps, variables, and system state information.'
+    )
+
+    company_id = fields.Many2one(
+        'res.company',
+        string='Company',
+        default=lambda self: self.env.company
+    )
+    
+    # Rate limiting tracking
+    rate_limit_requests_per_minute = fields.Integer(
+        string='Rate Limit (requests/min)',
+        default=5,
+        help='Maximum requests per minute (5 without API key, 50 with key)'
+    )
+    
+    requests_this_minute = fields.Integer(
+        string='Requests This Minute',
+        default=0,
+        readonly=True,
+        help='Number of API requests made in the current minute window'
+    )
+    
+    rate_limit_window_start = fields.Datetime(
+        string='Rate Limit Window Start',
+        readonly=True,
+        help='Start time of the current rate limiting window'
+    )
+    
+    last_request_time = fields.Datetime(
+        string='Last Request Time',
+        readonly=True,
+        help='Timestamp of the last API request'
+    )
+    
     # Computed fields
     sync_log_count = fields.Integer(
         string='Sync Logs',
@@ -76,38 +126,88 @@ class NvdConnector(models.Model):
     
     def _compute_sync_log_count(self):
         for record in self:
-            # Count all sync logs since importer_id relationship may not be set
+            # Count all sync logs since Connector_id relationship may not be set
             record.sync_log_count = self.env['vuln.fw.nvd.sync.log'].search_count([])
     
     def action_sync_nvd(self):
         """Simple NVD data synchronization"""
+        start_time = datetime.now()
+        
+        if self.debug_mode:
+            _logger.info(f"[DEBUG] 🚀 Starting NVD sync - Connector: {self.name} (ID: {self.id})")
+            _logger.info(f"[DEBUG] 👤 User: {self.env.user.name} (ID: {self.env.user.id})")
+            _logger.info(f"[DEBUG] 💾 Database: {self.env.cr.dbname}")
+            _logger.info(f"[DEBUG] ⚙️ Connector active: {self.active}")
+        
         if not self.active:
-            raise UserError(_('This importer is not active. Please activate it first.'))
+            if self.debug_mode:
+                _logger.error(f"[DEBUG] Connector is not active")
+            raise UserError(_('This Connector is not active. Please activate it first.'))
+        
+        if self.debug_mode:
+            _logger.info(f"[DEBUG] Creating sync log entry...")
         
         sync_log = self.env['vuln.fw.nvd.sync.log'].create({
             'sync_date': fields.Datetime.now(),
             'status': 'running'
         })
         
+        if self.debug_mode:
+            _logger.info(f"[DEBUG] Sync log created (ID: {sync_log.id})")
+        
         try:
             # Basic NVD API call
             url = self.api_url or "https://services.nvd.nist.gov/rest/json/cves/2.0"
+            
+            if self.debug_mode:
+                _logger.info(f"[DEBUG] 🌐 API URL: {url}")
+            
             headers = {'Accept': 'application/json'}
             if self.api_key:
                 headers['apiKey'] = self.api_key
+                if self.debug_mode:
+                    _logger.info(f"[DEBUG] 🔑 Using API key: {self.api_key[:10]}...")
+            else:
+                if self.debug_mode:
+                    _logger.info(f"[DEBUG] 🆓 No API key configured - using free tier")
             
             # Limit to recent CVEs for demo purposes
+            batch_size = min(self.batch_size or 20, 100)
             params = {
-                'resultsPerPage': min(self.batch_size or 20, 100),
+                'resultsPerPage': batch_size,
                 'startIndex': 0
             }
             
+            if self.debug_mode:
+                _logger.info(f"[DEBUG] Request parameters: {params}")
+                _logger.info(f"[DEBUG] Sending API request...")
+            
             response = requests.get(url, headers=headers, params=params, timeout=30)
+            
+            if self.debug_mode:
+                _logger.info(f"[DEBUG] 📤 Response status code: {response.status_code}")
+                _logger.info(f"[DEBUG] 📄 Response headers: {dict(response.headers)}")
+            
             response.raise_for_status()
             
             data = response.json()
+            
+            if self.debug_mode:
+                _logger.info(f"[DEBUG] Parsing JSON response...")
+            
             total_results = data.get('totalResults', 0)
             vulnerabilities = data.get('vulnerabilities', [])
+            
+            if self.debug_mode:
+                _logger.info(f"[DEBUG] 📊 Total results available: {total_results}")
+                _logger.info(f"[DEBUG] 📋 Vulnerabilities in this batch: {len(vulnerabilities)}")
+                if vulnerabilities:
+                    first_cve = vulnerabilities[0].get('cve', {})
+                    cve_id = first_cve.get('id', 'N/A')
+                    _logger.info(f"[DEBUG] 🎯 First CVE in batch: {cve_id}")
+            
+            if self.debug_mode:
+                _logger.info(f"[DEBUG] Updating sync log...")
             
             sync_log.write({
                 'end_time': fields.Datetime.now(),
@@ -117,10 +217,20 @@ class NvdConnector(models.Model):
                 'notes': f'Successfully retrieved {len(vulnerabilities)} CVE records from NVD API'
             })
             
+            if self.debug_mode:
+                _logger.info(f"[DEBUG] Sync log updated (ID: {sync_log.id})")
+            
             # Update last sync date
             self.write({
                 'last_sync_date': fields.Datetime.now()
             })
+            
+            end_time = datetime.now()
+            processing_time = (end_time - start_time).total_seconds()
+            
+            if self.debug_mode:
+                _logger.info(f"[DEBUG] ✅ Last sync date updated")
+                _logger.info(f"[DEBUG] ⏱️ Processing time: {processing_time:.3f} seconds")
             
             _logger.info(f'NVD sync completed successfully. Retrieved {len(vulnerabilities)} CVE records.')
             
@@ -136,11 +246,18 @@ class NvdConnector(models.Model):
             }
             
         except Exception as e:
+            if self.debug_mode:
+                _logger.error(f"[DEBUG] ❌ Sync failed with exception: {str(e)}", exc_info=True)
+            
             sync_log.write({
                 'end_time': fields.Datetime.now(),
                 'status': 'error',
                 'error_message': str(e)
             })
+            
+            if self.debug_mode:
+                _logger.error(f"[DEBUG] Error logged to sync log (ID: {sync_log.id})")
+            
             _logger.error(f'NVD sync failed: {str(e)}')
             
             return {
@@ -155,48 +272,15 @@ class NvdConnector(models.Model):
             }
     
     def action_view_sync_logs(self):
-        """View sync logs for this importer"""
+        """View sync logs for this Connector"""
         return {
             'name': _('Sync Logs'),
             'type': 'ir.actions.act_window',
             'res_model': 'vuln.fw.nvd.sync.log',
             'view_mode': 'list,form',
-            'domain': [('importer_id', '=', self.id)],
-            'context': {'default_importer_id': self.id}
+            'domain': [('Connector_id', '=', self.id)],
+            'context': {'default_Connector_id': self.id}
         }
-    
-    name = fields.Char(
-        string='Importer Name',
-        required=True,
-        default='NVD Importer'
-    )
-    
-    api_key = fields.Char(
-        string='NVD API Key',
-        help='Optional API key for NVD requests (recommended for higher rate limits)'
-    )
-    
-    api_key = fields.Char(
-        string='NVD API Key',
-        help='Optional API key for increased rate limits'
-    )
-    
-    last_sync_date = fields.Datetime(
-        string='Last Sync Date',
-        help='Last successful synchronization date'
-    )
-    
-    active = fields.Boolean(
-        string='Active',
-        default=True
-    )
-    
-    # Company Support
-    company_id = fields.Many2one(
-        'res.company',
-        string='Company',
-        default=lambda self: self.env.company
-    )
     
     @api.model
     def sync_from_nvd(self, start_date=None, end_date=None, results_per_page=2000):
@@ -222,7 +306,7 @@ class NvdConnector(models.Model):
                         # Create a simple log entry instead of full vulnerability record
                         return self._sync_cve_data_simple(start_date, end_date, results_per_page)
                     else:
-                        _logger.info("CPE extension not available on importer model")
+                        _logger.info("CPE extension not available on Connector model")
                         raise UserError(_("NVD module requires either the vulnerability framework (vuln_source_core) or CPE module (vuln_fw_nvd_cpe) to be installed for functionality."))
                 except Exception as cpe_check_error:
                     _logger.info("Neither vulnerability framework nor CPE module available: %s", str(cpe_check_error))
@@ -237,10 +321,17 @@ class NvdConnector(models.Model):
     
     def _sync_cve_data(self, start_date=None, end_date=None, results_per_page=2000):
         """Sync CVE data for vulnerability management"""
+        if self.debug_mode:
+            _logger.info(f"[DEBUG] _sync_cve_data called with start_date={start_date}, end_date={end_date}, results_per_page={results_per_page}")
+        
         _logger.info("Starting CVE data sync for vulnerability management")
         
         # Use configurable API URL
         base_url = self.api_url or "https://services.nvd.nist.gov/rest/json/cves/2.0"
+        
+        if self.debug_mode:
+            _logger.info(f"[DEBUG] Base URL: {base_url}")
+        
         _logger.debug("Using API endpoint: %s", base_url)
         
         # Build parameters - adjust for free API usage
@@ -248,11 +339,15 @@ class NvdConnector(models.Model):
             # With API key: higher rate limits (50 requests per 30 seconds)
             max_results_per_page = min(results_per_page, 2000)  # NVD limit
             rate_limit_sleep = 0.6  # 50 requests per 30 seconds = ~1.67 req/sec
+            if self.debug_mode:
+                _logger.info(f"[DEBUG] Authenticated API - max_results_per_page: {max_results_per_page}, rate_limit_sleep: {rate_limit_sleep}s")
             _logger.info("Using authenticated API with higher rate limits")
         else:
             # Free API: lower rate limits (5 requests per 30 seconds)
             max_results_per_page = min(results_per_page, 100)  # Smaller batches for free API
             rate_limit_sleep = 6.0  # 5 requests per 30 seconds = 1 req/6 seconds
+            if self.debug_mode:
+                _logger.info(f"[DEBUG] Free API - max_results_per_page: {max_results_per_page}, rate_limit_sleep: {rate_limit_sleep}s")
             _logger.info("Using free API with rate limiting (5 requests per 30 seconds)")
         
         params = {
@@ -534,8 +629,27 @@ class NvdConnector(models.Model):
     def action_sync_nvd(self):
         """Manual sync action"""
         self.ensure_one()
+        
+        start_time = datetime.now()
+        
+        if self.debug_mode:
+            _logger.info(f"[DEBUG] Manual NVD sync action - Connector: {self.name} (ID: {self.id})")
+            _logger.info(f"[DEBUG] User: {self.env.user.name} (ID: {self.env.user.id})")
+        
         try:
+            if self.debug_mode:
+                _logger.info(f"[DEBUG] Calling sync_from_nvd()...")
+            
             result = self.sync_from_nvd()
+            
+            end_time = datetime.now()
+            processing_time = (end_time - start_time).total_seconds()
+            
+            if self.debug_mode:
+                _logger.info(f"[DEBUG] Sync completed successfully")
+                _logger.info(f"[DEBUG] Processing time: {processing_time:.3f} seconds")
+                _logger.info(f"[DEBUG] Result: {result}")
+            
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
@@ -547,6 +661,9 @@ class NvdConnector(models.Model):
                 }
             }
         except Exception as e:
+            if self.debug_mode:
+                _logger.error(f"[DEBUG] Manual sync failed: {str(e)}", exc_info=True)
+            
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
@@ -561,9 +678,28 @@ class NvdConnector(models.Model):
     def action_sync_sample(self):
         """Sync only 10 records as a sample"""
         self.ensure_one()
+        
+        start_time = datetime.now()
+        
+        if self.debug_mode:
+            _logger.info(f"[DEBUG] Sample sync action - Connector: {self.name} (ID: {self.id})")
+            _logger.info(f"[DEBUG] Requesting 10 records only")
+        
         try:
             # Use a small results_per_page to get only 10 records
+            if self.debug_mode:
+                _logger.info(f"[DEBUG] Calling sync_from_nvd(results_per_page=10)...")
+            
             result = self.sync_from_nvd(results_per_page=10)
+            
+            end_time = datetime.now()
+            processing_time = (end_time - start_time).total_seconds()
+            
+            if self.debug_mode:
+                _logger.info(f"[DEBUG] Sample sync completed")
+                _logger.info(f"[DEBUG] Processing time: {processing_time:.3f} seconds")
+                _logger.info(f"[DEBUG] Result: {result}")
+            
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
@@ -575,6 +711,9 @@ class NvdConnector(models.Model):
                 }
             }
         except Exception as e:
+            if self.debug_mode:
+                _logger.error(f"[DEBUG] Sample sync failed: {str(e)}", exc_info=True)
+            
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
