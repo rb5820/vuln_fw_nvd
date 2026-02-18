@@ -5,6 +5,12 @@ access_vuln_fw_nvd_connector_admin,vuln.fw.nvd.connector.admin,model_vuln_fw_nvd
 access_vuln_fw_nvd_reference_user,vuln.fw.nvd.reference.user,model_vuln_fw_nvd_reference,group_nvd_user,1,0,0,0
 access_vuln_fw_nvd_reference_manager,vuln.fw.nvd.reference.manager,model_vuln_fw_nvd_reference,group_nvd_manager,1,1,1,1
 access_vuln_fw_nvd_reference_admin,vuln.fw.nvd.reference.admin,model_vuln_fw_nvd_reference,base.group_system,1,1,1,1
+access_vuln_fw_nvd_cpe_dictionary_user,vuln.fw.nvd.cpe.dictionary.user,model_vuln_fw_nvd_cpe_dictionary,group_nvd_user,1,0,0,0
+access_vuln_fw_nvd_cpe_dictionary_manager,vuln.fw.nvd.cpe.dictionary.manager,model_vuln_fw_nvd_cpe_dictionary,group_nvd_manager,1,1,1,1
+access_vuln_fw_nvd_cpe_dictionary_admin,vuln.fw.nvd.cpe.dictionary.admin,model_vuln_fw_nvd_cpe_dictionary,base.group_system,1,1,1,1
+access_vuln_fw_nvd_cve_dictionary_user,vuln.fw.nvd.cve.dictionary.user,model_vuln_fw_nvd_cve_dictionary,group_nvd_user,1,0,0,0
+access_vuln_fw_nvd_cve_dictionary_manager,vuln.fw.nvd.cve.dictionary.manager,model_vuln_fw_nvd_cve_dictionary,group_nvd_manager,1,1,1,1
+access_vuln_fw_nvd_cve_dictionary_admin,vuln.fw.nvd.cve.dictionary.admin,model_vuln_fw_nvd_cve_dictionary,base.group_system,1,1,1,1
 access_nvd_sync_log_user,vuln.fw.nvd.sync.log.user,model_vuln_fw_nvd_sync_log,group_nvd_user,1,0,0,0
 access_nvd_sync_log_manager,vuln.fw.nvd.sync.log.manager,model_vuln_fw_nvd_sync_log,group_nvd_manager,1,1,1,1
 access_nvd_sync_log_admin,vuln.fw.nvd.sync.log.admin,model_vuln_fw_nvd_sync_log,base.group_system,1,1,1,1

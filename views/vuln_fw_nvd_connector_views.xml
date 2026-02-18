@@ -7,26 +7,108 @@
         <field name="model">vuln.fw.nvd.connector</field>
         <field name="arch" type="xml">
             <form string="National Vulnerability Database Connector">
-                <header>
-                    <field name="active" string="Active" widget="boolean_toggle"/>
-                    <field name="connector_active" string="Connector Active" widget="boolean_toggle"/>
-                   
-                </header>
                 <sheet>
                     <div class="oe_title">
                         <h1>
                             <field name="name" placeholder="National Vulnerability Database Connector Name"/>
                         </h1>
                     </div>
-                    <group>
-                        <group>
-                            <field name="api_url" placeholder="https://services.nvd.nist.gov/rest/json"/>
-                            <field name="api_key" password="True"/>
-                        </group>
-                        <group>
-                            <field name="last_sync_date"/>
-                        </group>
-                    </group>
+                    
+                    <notebook>
+                        <!-- API Connection Settings -->
+                        <page string="🌐 API Connection" name="api_connection">
+                            <group string="⚙️ Connector Controls">
+                                <group>
+                                    <field name="is_default" widget="boolean_toggle" string="Default Connector"/>
+                                    <field name="connector_active" widget="boolean_toggle" string="Activate Connector"/>
+                                    <field name="debug_mode" widget="boolean_toggle" string="Debug Mode"/>
+                                </group>
+                            </group>
+                            <group string="🔗 Connection">
+                                <group>
+                                    <field name="api_url" placeholder="https://services.nvd.nist.gov/rest/json"/>
+                                    <field name="api_key" password="True"/>
+                                </group>
+                                <group>
+                                    <field name="last_sync_date"/>
+                                    <field name="batch_size"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <!-- Request Configuration -->
+                        <page string="⚙️ Request Configuration" name="request_config">
+                            <group string="ℹ️ Implementation Status">
+                                <p style="color: #FF9800; font-weight: bold;">⚠️ These fields are currently placeholders for future implementation. The retry logic and timeout configuration are not yet integrated into the API connector.</p>
+                            </group>
+                            <group string="🎯 Request Timeouts &amp; Retries">
+                                <group>
+                                    <field name="request_timeout_seconds" help="HTTP request timeout in seconds [PLACEHOLDER]"/>
+                                    <field name="max_retries" help="Maximum number of retry attempts for failed requests [PLACEHOLDER]"/>
+                                </group>
+                                <group>
+                                    <field name="retry_delay_seconds" help="Delay in seconds between retry attempts [PLACEHOLDER]"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <!-- Rate Limiting -->
+                        <page string="🚦 Rate Limiting" name="rate_limiting">
+                            <group string="ℹ️ Implementation Status">
+                                <p style="color: #FF9800; font-weight: bold;">⚠️ Rate limiting is partially implemented with hardcoded sleep intervals. The dynamic rate limit configuration fields are not yet integrated into the API connector.</p>
+                            </group>
+                            <group string="⏱️ Request Rate Control">
+                                <group>
+                                    <field name="rate_limit_requests_per_minute" help="Maximum requests per minute to NVD API [PLACEHOLDER]"/>
+                                    <field name="requests_this_minute" readonly="1" help="Requests made in current minute window [PLACEHOLDER]"/>
+                                </group>
+                                <group>
+                                    <field name="rate_limit_window_start" readonly="1" help="Start time of current rate limit window [PLACEHOLDER]"/>
+                                    <field name="last_request_time" readonly="1" help="Timestamp of last API request [PLACEHOLDER]"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <!-- Error Handling -->
+                        <page string="⚠️ Error Handling" name="error_handling">
+                            <group string="ℹ️ Implementation Status">
+                                <p style="color: #FF9800; font-weight: bold;">⚠️ Error tracking fields are currently placeholders. Error details are logged to sync logs but not aggregated here. Consecutive failure counter is not yet implemented.</p>
+                            </group>
+                            <group string="🛡️ Error Management">
+                                <group>
+                                    <field name="consecutive_failures" readonly="1" help="Number of consecutive failed requests [PLACEHOLDER]"/>
+                                    <field name="max_consecutive_failures" help="Maximum consecutive failures before stopping sync [PLACEHOLDER]"/>
+                                </group>
+                                <group>
+                                    <field name="last_error_timestamp" readonly="1" help="When the last error occurred [PLACEHOLDER]"/>
+                                </group>
+                                <group colspan="2">
+                                    <field name="last_error_message" readonly="1" nolabel="1" help="Details of the last error encountered [PLACEHOLDER]"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <!-- Performance Metrics -->
+                        <page string="📈 Performance Metrics" name="performance_metrics">
+                            <group string="ℹ️ Aggregated Metrics">
+                                <p>Performance metrics below are aggregated from all child CVE and CPE connectors. These represent cumulative statistics from the last 10 synchronization operations.</p>
+                            </group>
+                            <group string="📊 Synchronization Statistics">
+                                <group>
+                                    <field name="total_requests_made" readonly="1" help="Total number of API requests made across all child connectors"/>
+                                    <field name="total_records_processed" readonly="1" help="Total number of vulnerability records processed across all child connectors"/>
+                                </group>
+                                <group>
+                                    <field name="average_response_time_ms" readonly="1" help="Average processing time per sync across all child connectors"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <!-- Notes -->
+                        <page string="📝 Notes" name="notes">
+                            <field name="notes" nolabel="1"/>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
@@ -39,24 +121,29 @@
         <field name="arch" type="xml">
             <list string="National Vulnerability Database Connectors">
                 <field name="name"/>
+                <field name="total_requests_made"/>
+                <field name="total_records_processed"/>
+                <field name="average_response_time_ms"/>
                 <field name="last_sync_date"/>
+                <field name="is_default" widget="boolean_toggle"/>
+                <field name="active" widget="archive_column" string="Archive"/>
                 <field name="connector_active" widget="boolean_toggle"/>
             </list>
         </field>
     </record>
 
-    <!-- NVD Importer Action -->
+    <!-- NVD Connector Action -->
     <record id="action_nvd_connector" model="ir.actions.act_window">
-        <field name="name">NVD Connectors</field>
+        <field name="name">National Vulnerability Database Connector</field>
         <field name="res_model">vuln.fw.nvd.connector</field>
         <field name="view_mode">list,form</field>
         <field name="context">{}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Create your first NVD Importer
+                Create your first National Vulnerability Database Connector to start importing vulnerability data from NIST into Odoo.
             </p>
             <p>
-                Set up NVD (National Vulnerability Database) importers to automatically 
+                Set up National Vulnerability Database connectors to automatically 
                 synchronize vulnerability data from NIST into your Odoo system.
             </p>
         </field>

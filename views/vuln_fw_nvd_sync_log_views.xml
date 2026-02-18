@@ -89,11 +89,12 @@
     </record>
 
     <!-- Menu Item for Sync Logs -->
-    <menuitem 
+    <!-- <menuitem 
         id="menu_nvd_sync_logs"
         name="📋 Sync Logs"
         parent="menu_nvd_reporting"
         action="action_nvd_sync_log"
-        sequence="10"/>
+        sequence="10"
+       /> -->
 
 </odoo>

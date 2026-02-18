@@ -15,13 +15,6 @@
         parent="menu_nvd_root"
         sequence="100"/>
     
-    <!-- Operations Menu -->
-    <menuitem 
-        id="menu_nvd_operations"
-        name="🔄 Operations"
-        parent="menu_nvd_root"
-        sequence="50"/>
-    
     <!-- Reporting Menu -->
     <menuitem 
         id="menu_nvd_reporting"
@@ -75,11 +68,11 @@
         <field name="context">{}</field>
     </record>
 
-    <!-- Operations Menu Items -->
+    <!-- Configuration Menu Items -->
     <menuitem
         id="menu_nvd_connector"
         name="Connectors"
-        parent="menu_nvd_operations"
+        parent="menu_nvd_config"
         action="action_nvd_connector"
         sequence="10"/>
 

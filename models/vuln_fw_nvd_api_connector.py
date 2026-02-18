@@ -49,6 +49,12 @@ class NvdConnector(models.Model):
         help='Enable/disable scheduled sync for this connector (independent of archive status)'
     )
     
+    is_default = fields.Boolean(
+        string='Default Connector',
+        default=False,
+        help='Mark this as the default NVD connector. Only one connector can be default at a time.'
+    )
+    
     last_sync_date = fields.Datetime(
         string='Last Sync Date',
         help='Date and time of the last successful synchronization'
@@ -58,18 +64,6 @@ class NvdConnector(models.Model):
         string='Batch Size',
         default=100,
         help='Number of records to process per batch'
-    )
-    
-    auto_sync = fields.Boolean(
-        string='Auto Sync',
-        default=False,
-        help='Enable automatic synchronization via scheduled action'
-    )
-    
-    sync_interval = fields.Integer(
-        string='Sync Interval (hours)',
-        default=24,
-        help='Hours between automatic synchronizations'
     )
     
     notes = fields.Text(
@@ -93,6 +87,24 @@ class NvdConnector(models.Model):
     )
     
     # Rate limiting tracking
+    request_timeout_seconds = fields.Integer(
+        string='Request Timeout (seconds)',
+        default=30,
+        help='Timeout for API requests in seconds'
+    )
+    
+    max_retries = fields.Integer(
+        string='Maximum Retries',
+        default=3,
+        help='Number of times to retry failed API requests'
+    )
+    
+    retry_delay_seconds = fields.Integer(
+        string='Retry Delay (seconds)',
+        default=5,
+        help='Delay between retry attempts in seconds'
+    )
+    
     rate_limit_requests_per_minute = fields.Integer(
         string='Rate Limit (requests/min)',
         default=5,
@@ -118,6 +130,53 @@ class NvdConnector(models.Model):
         help='Timestamp of the last API request'
     )
     
+    # Error handling and monitoring
+    consecutive_failures = fields.Integer(
+        string='Consecutive Failures',
+        default=0,
+        readonly=True,
+        help='Count of consecutive failed sync attempts'
+    )
+    
+    max_consecutive_failures = fields.Integer(
+        string='Max Consecutive Failures',
+        default=5,
+        help='Disable connector after this many consecutive failures (0 to disable)'
+    )
+    
+    last_error_message = fields.Text(
+        string='Last Error Message',
+        readonly=True,
+        help='Details of the last error encountered'
+    )
+    
+    last_error_timestamp = fields.Datetime(
+        string='Last Error Timestamp',
+        readonly=True,
+        help='When the last error occurred'
+    )
+    
+    # Performance metrics
+    average_response_time_ms = fields.Float(
+        string='Average Response Time (ms)',
+        readonly=True,
+        help='Average API response time in milliseconds'
+    )
+    
+    total_requests_made = fields.Integer(
+        string='Total Requests Made',
+        default=0,
+        readonly=True,
+        help='Total number of API requests made by this connector'
+    )
+    
+    total_records_processed = fields.Integer(
+        string='Total Records Processed',
+        default=0,
+        readonly=True,
+        help='Total number of records processed across all syncs'
+    )
+    
     # Computed fields
     sync_log_count = fields.Integer(
         string='Sync Logs',
@@ -129,9 +188,186 @@ class NvdConnector(models.Model):
             # Count all sync logs since Connector_id relationship may not be set
             record.sync_log_count = self.env['vuln.fw.nvd.sync.log'].search_count([])
     
+    @api.constrains('is_default')
+    def _check_unique_default(self):
+        """Ensure only one connector is marked as default"""
+        for record in self:
+            if record.is_default:
+                # Check if another default exists
+                other_defaults = self.search([
+                    ('is_default', '=', True),
+                    ('id', '!=', record.id)
+                ])
+                if other_defaults:
+                    raise ValidationError(
+                        _("Only one NVD connector can be marked as default. "
+                          "Please unset the default flag on '%s' first.") % other_defaults[0].name
+                    )
+    
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Auto-unset other defaults when creating a new default connector"""
+        for vals in vals_list:
+            if vals.get('is_default'):
+                self.search([('is_default', '=', True)]).write({'is_default': False})
+        return super(NvdConnector, self).create(vals_list)
+    
+    def write(self, vals):
+        """Auto-unset other defaults when setting a connector as default"""
+        if vals.get('is_default'):
+            self.search([
+                ('is_default', '=', True),
+                ('id', 'not in', self.ids)
+            ]).write({'is_default': False})
+        return super(NvdConnector, self).write(vals)
+    
+    def _aggregate_child_metrics(self):
+        """Aggregate performance metrics from all child connectors (CVE and CPE)"""
+        self.ensure_one()
+        
+        try:
+            total_requests = 0
+            total_records = 0
+            response_times = []
+            
+            # Aggregate metrics from CVE child connectors
+            child_cve_connectors = self.env['vuln.fw.nvd.cve.api.connector'].search([
+                ('parent_connector_id', '=', self.id)
+            ])
+            
+            for child in child_cve_connectors:
+                sync_logs = self.env['vuln.fw.nvd.cve.api.sync.log'].search([
+                    ('connector_id', '=', child.id)
+                ], order='start_timestamp desc', limit=10)
+                
+                for log in sync_logs:
+                    total_requests += 1
+                    total_records += log.cves_fetched or 0
+                    if log.duration_seconds and log.duration_seconds > 0:
+                        response_times.append(log.duration_seconds * 1000)
+            
+            # Aggregate metrics from CPE child connectors
+            child_cpe_connectors = self.env['vuln.fw.nvd.cpe.api.connector'].search([
+                ('parent_connector_id', '=', self.id)
+            ])
+            
+            if child_cpe_connectors:
+                try:
+                    for child in child_cpe_connectors:
+                        sync_logs = self.env['vuln.fw.nvd.cpe.api.sync.log'].search([
+                            ('connector_id', '=', child.id)
+                        ], order='start_timestamp desc', limit=10)
+                        
+                        for log in sync_logs:
+                            total_requests += 1
+                            total_records += log.cpes_fetched or 0
+                            if log.duration_seconds and log.duration_seconds > 0:
+                                response_times.append(log.duration_seconds * 1000)
+                except Exception as cpe_error:
+                    _logger.debug("CPE sync logs not available or model missing: %s", str(cpe_error))
+            
+            if not total_requests:
+                _logger.debug("No sync logs found from child connectors")
+                return
+            
+            # Calculate averages
+            avg_response_time = 0
+            if response_times:
+                avg_response_time = sum(response_times) / len(response_times)
+            
+            # Update parent connector with aggregated metrics
+            self.write({
+                'total_requests_made': total_requests,
+                'total_records_processed': total_records,
+                'average_response_time_ms': avg_response_time,
+            })
+            
+            _logger.info("✅ Parent connector metrics aggregated (CVE + CPE):")
+            _logger.info("   ├─ Total Requests: %d", total_requests)
+            _logger.info("   ├─ Total Records: %d", total_records)
+            _logger.info("   └─ Avg Response Time: %.2f ms", avg_response_time)
+            
+        except Exception as e:
+            _logger.warning("Failed to aggregate child metrics: %s", str(e))
+    
     def action_sync_nvd(self):
         """Simple NVD data synchronization"""
         start_time = datetime.now()
+        
+        # Log parent connector metrics
+        _logger.info("=" * 80)
+        _logger.info("👨‍👧 [PARENT CONNECTOR] NVD Connector Metrics")
+        _logger.info("=" * 80)
+        _logger.info("📊 Connector Details:")
+        _logger.info("   ├─ Name: %s (ID: %d)", self.name, self.id)
+        _logger.info("   ├─ Active: %s", self.active)
+        _logger.info("   ├─ Connector Active: %s", self.connector_active)
+        _logger.info("   ├─ Debug Mode: %s", self.debug_mode if hasattr(self, 'debug_mode') else False)
+        _logger.info("   ├─ API URL: %s", self.api_url)
+        _logger.info("   ├─ API Key Present: %s", bool(self.api_key))
+        if self.api_key:
+            _logger.info("   ├─ API Key Length: %d chars", len(self.api_key))
+        _logger.info("   ├─ Last Sync Date: %s", self.last_sync_date or "Never")
+        _logger.info("   ├─ Batch Size: %d", self.batch_size or 100)
+        _logger.info("   ├─ Connector Active: %s", self.connector_active)
+        _logger.info("   ├─ API Key Present: %s", bool(self.api_key))
+        
+        # Count child connectors
+        child_cve_connectors = self.env['vuln.fw.nvd.cve.api.connector'].search([
+            ('parent_connector_id', '=', self.id)
+        ])
+        child_cpe_connectors = self.env['vuln.fw.nvd.cpe.api.connector'].search([
+            ('parent_connector_id', '=', self.id)
+        ])
+        _logger.info("   ├─ Child CVE Connectors: %d", len(child_cve_connectors))
+        _logger.info("   └─ Child CPE Connectors: %d", len(child_cpe_connectors))
+        
+        # Count sync logs
+        sync_log_count = self.env['vuln.fw.nvd.sync.log'].search_count([
+            ('connector_id', '=', self.id) if hasattr(self.env['vuln.fw.nvd.sync.log'], 'connector_id') else []
+        ]) if 'connector_id' in self.env['vuln.fw.nvd.sync.log']._fields else 0
+        _logger.info("📊 Sync Statistics:")
+        _logger.info("   ├─ Total Sync Logs: %d", sync_log_count)
+        
+        # Request tracking
+        now = fields.Datetime.now()
+        minute_ago = now - timedelta(minutes=1)
+        
+        # Count total requests ever made by this connector
+        total_requests_all_time = self.env['vuln.fw.nvd.sync.log'].search_count([])
+        
+        # Count requests in last minute
+        recent_logs = self.env['vuln.fw.nvd.sync.log'].search([
+            ('sync_date', '>=', minute_ago)
+        ])
+        requests_last_minute = len(recent_logs)
+        
+        # Calculate request speed metrics
+        requests_per_second = 0
+        avg_request_time_ms = 0
+        
+        if requests_last_minute > 0:
+            requests_per_second = requests_last_minute / 60.0  # Over 60 seconds
+            
+            # Calculate average duration of recent syncs
+            total_duration_seconds = 0
+            for log in recent_logs:
+                if hasattr(log, 'start_date') and hasattr(log, 'end_date') and log.start_date and log.end_date:
+                    try:
+                        delta = log.end_date - log.start_date
+                        total_duration_seconds += delta.total_seconds()
+                    except:
+                        pass
+            
+            if total_duration_seconds > 0:
+                avg_request_time_ms = (total_duration_seconds / requests_last_minute) * 1000
+        
+        _logger.info("📡 Request Metrics:")
+        _logger.info("   ├─ Total Requests (All Time): %d", total_requests_all_time)
+        _logger.info("   ├─ Requests Last Minute: %d", requests_last_minute)
+        _logger.info("   ├─ Requests Per Second: %.2f", requests_per_second)
+        _logger.info("   └─ Avg Request Time: %.2f ms", avg_request_time_ms)
+        _logger.info("=" * 80)
         
         if self.debug_mode:
             _logger.info(f"[DEBUG] 🚀 Starting NVD sync - Connector: {self.name} (ID: {self.id})")

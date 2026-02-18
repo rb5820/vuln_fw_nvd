@@ -105,7 +105,7 @@ class VulnFwNvdReference(models.Model):
     
     # === METHODS ===
     @api.model
-    def get_or_create_reference(self, url, ref_type=None, description=None, entity_name=None, entity_type=None):
+    def get_or_create_reference(self, url, ref_type=None, description=None, entity_name=None, entity_type=None, verbose=False):
         """
         Get existing reference or create new one.
         
@@ -115,6 +115,7 @@ class VulnFwNvdReference(models.Model):
             description (str): Optional description
             entity_name (str): Name of the entity (e.g., 'cisco', 'windows')
             entity_type (str): Type of entity ('vendor', 'product', 'cve')
+            verbose (bool): Log detailed information (default False for cleaner output)
             
         Returns:
             vuln.fw.nvd.reference: Reference record
@@ -128,7 +129,8 @@ class VulnFwNvdReference(models.Model):
             reference = self.search([('url', '=', url)], limit=1)
             
             if reference:
-                _logger.info("🔍 [REFERENCE] Found existing reference: %s (ID: %s)", url[:80], reference.id)
+                if verbose:
+                    _logger.info("🔍 [REFERENCE] Found existing reference: %s (ID: %s)", url[:80], reference.id)
                 # Update fields if provided and not set
                 update_vals = {}
                 if ref_type and not reference.ref_type:
@@ -139,7 +141,8 @@ class VulnFwNvdReference(models.Model):
                     update_vals['entity_type'] = entity_type
                 if update_vals:
                     reference.write(update_vals)
-                    _logger.info("✏️ [REFERENCE] Updated reference with: %s", update_vals)
+                    if verbose:
+                        _logger.info("✏️ [REFERENCE] Updated reference with: %s", update_vals)
                 return reference
             
             # Create new reference
@@ -152,8 +155,9 @@ class VulnFwNvdReference(models.Model):
             }
             
             reference = self.create(vals)
-            _logger.info("✅ [REFERENCE] Created new reference: %s (ID: %s, Type: %s, Entity: %s/%s)", 
-                        url[:80], reference.id, ref_type, entity_type, entity_name)
+            if verbose:
+                _logger.info("✅ [REFERENCE] Created new reference: %s (ID: %s, Type: %s, Entity: %s/%s)", 
+                            url[:80], reference.id, ref_type, entity_type, entity_name)
             return reference
             
         except Exception as e:
