@@ -34,6 +34,8 @@
         'views/vuln_fw_nvd_api_connector_views.xml',
         'views/vuln_fw_nvd_reference_views.xml',
         'views/vuln_fw_nvd_sync_log_views.xml',
+        'views/vuln_fw_nvd_cpe_dictionary_views.xml',
+        'views/vuln_fw_nvd_cve_dictionary_views.xml',
         'views/vuln_fw_nvd_webhook_views.xml',
         'views/vuln_fw_nvd_webhook_receiver_views.xml',
         'views/vuln_fw_nvd_webhook_allowed_host_views.xml',
@@ -42,6 +44,9 @@
         'views/vuln_fw_nvd_dashboard_views.xml',
         'data/ir_cron.xml',
         'data/vuln_fw_nvd_api_connector.xml',
+        'data/vuln_fw_nvd_vendor_data.xml',
+        'data/vuln_fw_nvd_product_data.xml',
+        'data/vuln_fw_nvd_cpe_dictionary.xml',
         'data/vuln_fw_nvd_webhook_receiver_default.xml',
     ],
     'demo': [

@@ -7,7 +7,7 @@ _logger = logging.getLogger(__name__)
 
 
 class VulnFwNvdCveDictionary(models.Model):
-    """Base CVE Dictionary - minimal fields for cross-module compatibility
+    """Base Common Vulnerabilities and Exposures (CVE) Dictionary - minimal fields for cross-module compatibility
     
     This base model allows both CPE and CVE modules to work with CVE dictionary
     entries independently. Each module can inherit and extend this model with
@@ -18,7 +18,7 @@ class VulnFwNvdCveDictionary(models.Model):
     Both modules benefit from each other's enhancements through inheritance.
     """
     _name = 'vuln.fw.nvd.cve.dictionary'
-    _description = 'CVE Dictionary Entry (Base)'
+    _description = 'Common Vulnerabilities and Exposures (CVE) Dictionary Entry (Base)'
     _order = 'published_date desc, cve_id'
     _rec_name = 'cve_id'
 

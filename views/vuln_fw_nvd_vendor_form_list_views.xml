@@ -52,6 +52,7 @@
                             <field name="description" nolabel="1" colspan="2"/>
                         </group>
                     </sheet>
+                    <chatter />
                 </form>
             </field>
         </record>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- CPE Dictionary Form View -->
+        <record id="view_vuln_fw_nvd_cpe_dictionary_form" model="ir.ui.view">
+            <field name="name">vuln.fw.nvd.cpe.dictionary.form</field>
+            <field name="model">vuln.fw.nvd.cpe.dictionary</field>
+            <field name="arch" type="xml">
+                <form string="CPE Dictionary Entry">
+                    <header>
+                        <widget name="web_ribbon" title="CPE 2.3" bg_color="text-bg-info"/>
+                    </header>
+                    <sheet>
+                        <div name="button_box" class="oe_button_box">
+                            <!-- Placeholder for stat buttons from extensions -->
+                        </div>
+                        
+                        <div class="oe_title">
+                            <label for="cpe_uri" class="oe_edit_only"/>
+                            <h1><field name="cpe_uri" placeholder="e.g., cpe:2.3:a:vendor:product:version:*:*:*:*:*:*:*"/></h1>
+                        </div>
+                        
+                        <group>
+                            <group name="basic_info" string="Basic Information">
+                                <field name="vendor"/>
+                                <field name="product"/>
+                                <field name="version"/>
+                                <field name="part"/>
+                            </group>
+                            <group name="metadata" string="Metadata">
+                                <field name="edition"/>
+                                <field name="sw_edition"/>
+                                <field name="target_sw"/>
+                                <field name="target_hw"/>
+                                <field name="language"/>
+                                <field name="update"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Details" name="details">
+                                <group>
+                                    <group name="identifiers" string="Identifiers">
+                                        <field name="cpe_name_id"/>
+                                        <field name="title"/>
+                                        <field name="cpe_name" readonly="1" invisible="not cpe_name"/>
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <chatter />
+                </form>
+            </field>
+        </record>
+
+        <!-- CPE Dictionary list View -->
+        <record id="view_vuln_fw_nvd_cpe_dictionary_list" model="ir.ui.view">
+            <field name="name">vuln.fw.nvd.cpe.dictionary.list</field>
+            <field name="model">vuln.fw.nvd.cpe.dictionary</field>
+            <field name="arch" type="xml">
+                <list string="CPE Dictionary">
+                    <field name="cpe_uri"/>
+                    <field name="vendor"/>
+                    <field name="product"/>
+                    <field name="version"/>
+                    <field name="part"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- CPE Dictionary Search View -->
+        <record id="view_vuln_fw_nvd_cpe_dictionary_search" model="ir.ui.view">
+            <field name="name">vuln.fw.nvd.cpe.dictionary.search</field>
+            <field name="model">vuln.fw.nvd.cpe.dictionary</field>
+            <field name="arch" type="xml">
+                <search string="Search CPE Dictionary">
+                    <field name="cpe_uri"/>
+                    <field name="vendor"/>
+                    <field name="product"/>
+                    <field name="version"/>
+                    <field name="title"/>
+                    <separator/>
+                    <filter string="Applications" name="applications" domain="[('part', '=', 'a')]"/>
+                    <filter string="Hardware" name="hardware" domain="[('part', '=', 'h')]"/>
+                    <filter string="Operating Systems" name="os" domain="[('part', '=', 'o')]"/>
+                    <separator/>
+                    <group expand="0" string="Group By">
+                        <filter string="Vendor" name="group_vendor" context="{'group_by': 'vendor'}"/>
+                        <filter string="Product" name="group_product" context="{'group_by': 'product'}"/>
+                        <filter string="Part" name="group_part" context="{'group_by': 'part'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+    </data>
+</odoo>

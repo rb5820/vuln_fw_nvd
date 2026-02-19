@@ -19,15 +19,22 @@ class VulnFwNvdCpeDictionary(models.Model):
     """
     _name = 'vuln.fw.nvd.cpe.dictionary'
     _description = 'CPE Dictionary Entry (Base)'
-    _order = 'cpe_name'
+    _order = 'cpe_uri'
     _rec_name = 'title'
+    _inherit = ['mail.thread']  # Enable mail threading and chatter
 
     # === CORE CPE FIELDS (Required for all modules) ===
-    cpe_name = fields.Char(
-        string='CPE Name',
+    cpe_uri = fields.Char(
+        string='CPE URI',
         required=True,
         index=True,
-        help='CPE 2.3 formatted name (e.g., cpe:2.3:a:vendor:product:version:*:*:*:*:*:*:*)'
+        help='CPE 2.3 formatted URI (e.g., cpe:2.3:a:vendor:product:version:*:*:*:*:*:*:*)'
+    )
+    
+    cpe_name = fields.Char(
+        string='CPE Name (Deprecated)',
+        index=True,
+        help='DEPRECATED: Use cpe_uri instead. CPE 2.3 formatted name'
     )
     
     cpe_name_id = fields.Char(
@@ -39,6 +46,7 @@ class VulnFwNvdCpeDictionary(models.Model):
     title = fields.Char(
         string='Title',
         required=True,
+        tracking=True,
         help='Human-readable title for the CPE entry'
     )
     
@@ -116,6 +124,7 @@ class VulnFwNvdCpeDictionary(models.Model):
         string='Deprecated',
         default=False,
         index=True,
+        tracking=True,
         help='Whether this CPE entry is deprecated'
     )
     
@@ -139,6 +148,7 @@ class VulnFwNvdCpeDictionary(models.Model):
     active = fields.Boolean(
         string='Active',
         default=True,
+        tracking=True,
         help='Set to False to hide this CPE entry'
     )
     
@@ -168,6 +178,12 @@ class VulnFwNvdCpeDictionary(models.Model):
     _sql_constraints = [
         ('cpe_name_unique', 'UNIQUE(cpe_name)', 'CPE name must be unique!'),
     ]
+    
+    # === FIELD PARAMETER VALIDATION ===
+    @api.model
+    def _valid_field_parameter(self, field, name):
+        """Allow track_visibility parameter for mail thread functionality"""
+        return name == 'track_visibility' or super()._valid_field_parameter(field, name)
     
     def _format_display_version(self):
         """Format version string for display - can be overridden in child modules

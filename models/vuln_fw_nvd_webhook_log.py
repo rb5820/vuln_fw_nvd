@@ -11,7 +11,7 @@ class VulnFwNvdWebhookLog(models.Model):
     Base Webhook Log - Tracks all webhook triggers and responses.
     """
     _name = 'vuln.fw.nvd.webhook.log'
-    _description = 'NVD Webhook Log'
+    _description = 'National Vulnerability Database Webhook Log'
     _order = 'create_date desc'
     _rec_name = 'webhook_id'
     

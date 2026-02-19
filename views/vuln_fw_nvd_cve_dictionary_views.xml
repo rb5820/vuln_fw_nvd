@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- CVE Dictionary Form View -->
+        <record id="view_vuln_fw_nvd_cve_dictionary_form" model="ir.ui.view">
+            <field name="name">vuln.fw.nvd.cve.dictionary.form</field>
+            <field name="model">vuln.fw.nvd.cve.dictionary</field>
+            <field name="arch" type="xml">
+                <form string="CVE Dictionary Entry">
+                    <header>
+                        <widget name="web_ribbon" title="CVE Database" bg_color="text-bg-danger"/>
+                    </header>
+                    <sheet>
+                        <div name="button_box" class="oe_button_box">
+                            <!-- Placeholder for stat buttons from extensions -->
+                        </div>
+                        
+                        <div class="oe_title">
+                            <label for="cve_id" class="oe_edit_only"/>
+                            <h1><field name="cve_id" placeholder="e.g., CVE-2024-12345"/></h1>
+                        </div>
+                        
+                        <group>
+                            <group name="basic_info" string="Basic Information">
+                                <field name="description"/>
+                                <field name="vuln_status"/>
+                                <field name="source_identifier"/>
+                            </group>
+                            <group name="scores" string="CVSS Scores">
+                                <field name="cvss_v3_score"/>
+                                <field name="cvss_v2_score"/>
+                                <field name="cvss_v3_vector"/>
+                                <field name="cvss_v2_vector"/>
+                            </group>
+                        </group>
+                        
+                        <group>
+                            <group name="dates" string="Timeline">
+                                <field name="published_date"/>
+                                <field name="last_modified"/>
+                                <field name="sync_date"/>
+                            </group>
+                            <group name="metadata" string="Metadata">
+                                <field name="active"/>
+                                <field name="nvd_id"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Description" name="description">
+                                <field name="description" widget="html"/>
+                            </page>
+                            <page string="References" name="references">
+                                <!-- References will be added by plugin modules -->
+                                <p>No references available in base module.</p>
+                            </page>
+                            <page string="Technical Details" name="technical">
+                                <!-- Technical details will be added by plugin modules -->
+                                <p>Technical details available in enhanced modules.</p>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <chatter />
+                </form>
+            </field>
+        </record>
+
+        <!-- CVE Dictionary list View -->
+        <record id="view_vuln_fw_nvd_cve_dictionary_list" model="ir.ui.view">
+            <field name="name">vuln.fw.nvd.cve.dictionary.list</field>
+            <field name="model">vuln.fw.nvd.cve.dictionary</field>
+            <field name="arch" type="xml">
+                <list string="CVE Dictionary">
+                    <field name="cve_id"/>
+                    <field name="description"/>
+                    <field name="cvss_v3_score"/>
+                    <field name="published_date"/>
+                    <field name="last_modified"/>
+                    <field name="vuln_status"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- CVE Dictionary Search View -->
+        <record id="view_vuln_fw_nvd_cve_dictionary_search" model="ir.ui.view">
+            <field name="name">vuln.fw.nvd.cve.dictionary.search</field>
+            <field name="model">vuln.fw.nvd.cve.dictionary</field>
+            <field name="arch" type="xml">
+                <search string="Search CVE Dictionary">
+                    <field name="cve_id"/>
+                    <field name="description"/>
+                    <field name="vuln_status"/>
+                    <separator/>
+                    <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                    <filter string="Published This Year" name="published_this_year" 
+                            domain="[('published_date', '&gt;=', (context_today() - relativedelta(years=1)).strftime('%Y-01-01'))]"/>
+                    <filter string="Recent (30 days)" name="recent" 
+                            domain="[('published_date', '&gt;=', (context_today() - relativedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                    <separator/>
+                    <group expand="0" string="Group By">
+                        <filter string="Vuln Status" name="group_vuln_status" context="{'group_by': 'vuln_status'}"/>
+                        <filter string="Published Month" name="group_published_month" context="{'group_by': 'published_date:month'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+    </data>
+</odoo>

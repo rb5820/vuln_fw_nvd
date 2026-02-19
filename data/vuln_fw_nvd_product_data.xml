@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Windows Server 2022 Product -->
+        <record id="product_windows_server_2022" model="vuln.fw.nvd.product">
+            <field name="name">windows_server_2022</field>
+            <field name="vendor_id" ref="vendor_microsoft"/>
+            <field name="custom_name">Windows Server 2022</field>
+            <field name="description">Microsoft Windows Server 2022 - Enterprise server operating system with cloud integration, security enhancements, and container support.</field>
+            <field name="category">os</field>
+            <field name="active">true</field>
+        </record>
+
+        <!-- Dell PowerEdge R340 Product -->
+        <record id="product_poweredge_r340" model="vuln.fw.nvd.product">
+            <field name="name">poweredge_r340</field>
+            <field name="vendor_id" ref="vendor_dell"/>
+            <field name="custom_name">PowerEdge R340</field>
+            <field name="description">Dell PowerEdge R340 - 1U rack server designed for small businesses and remote offices, featuring Intel Xeon processors and enterprise-grade reliability.</field>
+            <field name="category">hardware</field>
+            <field name="active">true</field>
+        </record>
+
+        <!-- Siemens SIMATIC S1500 Product -->
+        <record id="product_simatic_s1500" model="vuln.fw.nvd.product">
+            <field name="name">simatic_s1500</field>
+            <field name="vendor_id" ref="vendor_siemens"/>
+            <field name="custom_name">SIMATIC S1500</field>
+            <field name="description">Siemens SIMATIC S1500 - High-performance PLC system for demanding automation tasks, featuring fast processing, extensive communication options, and advanced safety functions.</field>
+            <field name="category">hardware</field>
+            <field name="active">true</field>
+        </record>
+
+        <!-- Siemens SIMATIC S7-1500 CPU 1515-2 PN Product -->
+        <record id="product_6es7515_2am01_0ab0" model="vuln.fw.nvd.product">
+            <field name="name">6es7515-2am01-0ab0</field>
+            <field name="vendor_id" ref="vendor_siemens"/>
+            <field name="custom_name">SIMATIC S7-1500 CPU 1515-2 PN</field>
+            <field name="description">Siemens SIMATIC S7-1500 CPU 1515-2 PN - Powerful CPU with PROFINET interface for high-performance automation applications, featuring 1 MB work memory and fast processing capabilities.</field>
+            <field name="category">hardware</field>
+            <field name="active">true</field>
+        </record>
+    </data>
+</odoo>

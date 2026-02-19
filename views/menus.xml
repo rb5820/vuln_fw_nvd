@@ -77,6 +77,40 @@
         <field name="context">{}</field>
     </record>
 
+    <!-- CPE Dictionary Action -->
+    <record id="action_vuln_fw_nvd_cpe_dictionary" model="ir.actions.act_window">
+        <field name="name">CPE Dictionary</field>
+        <field name="res_model">vuln.fw.nvd.cpe.dictionary</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Common Platform Enumeration (CPE) dictionary entries found
+            </p>
+            <p>
+                Common Platform Enumeration (CPE) dictionary entries will appear here when imported from NVD.
+            </p>
+        </field>
+    </record>
+
+    <!-- CVE Dictionary Action -->
+    <record id="action_vuln_fw_nvd_cve_dictionary" model="ir.actions.act_window">
+        <field name="name">CVE Dictionary</field>
+        <field name="res_model">vuln.fw.nvd.cve.dictionary</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Common Vulnerabilities and Exposures (CVE) dictionary entries found
+            </p>
+            <p>
+                Common Vulnerabilities and Exposures (CVE) dictionary entries will appear here when imported from NVD.
+            </p>
+        </field>
+    </record>
+
     <record id="action_vuln_fw_nvd_webhook_receiver" model="ir.actions.act_window">
         <field name="name">Webhook Receivers</field>
         <field name="type">ir.actions.act_window</field>
@@ -192,23 +226,39 @@
         action="action_vuln_fw_nvd_dashboard"
         sequence="10"/>
 
+    <!-- CPE Dictionary Menu Item -->
+    <menuitem 
+        id="menu_nvd_cpe_dictionary"
+        name="💾 CPE Dictionary"
+        parent="menu_nvd_root"
+        action="action_vuln_fw_nvd_cpe_dictionary"
+        sequence="15"/>
+
+    <!-- CVE Dictionary Menu Item -->
+    <menuitem 
+        id="menu_nvd_cve_dictionary"
+        name="🛡️ CVE Dictionary"
+        parent="menu_nvd_root"
+        action="action_vuln_fw_nvd_cve_dictionary"
+        sequence="16"/>
+
     <menuitem
         id="menu_nvd_connector"
-        name="Connectors"
+        name="🔧 Connectors"
         parent="menu_nvd_config"
         action="action_vuln_fw_nvd_connector"
         sequence="10"/>
 
     <menuitem
         id="menu_nvd_reference"
-        name="References"
+        name="📖 References"
         parent="menu_nvd_config"
         action="action_vuln_fw_nvd_reference"
         sequence="20"/>
 
     <menuitem
         id="menu_nvd_sync_log"
-        name="Sync Logs"
+        name="📋 Sync Logs"
         parent="menu_nvd_reporting"
         action="action_vuln_fw_nvd_sync_log"
         sequence="10"/>
@@ -222,14 +272,14 @@
 
     <menuitem
         id="menu_nvd_webhook"
-        name="Outbound Webhooks"
+        name="📤 Outbound Webhooks"
         parent="menu_nvd_webhooks"
         action="action_vuln_fw_nvd_webhook"
         sequence="10"/>
 
     <menuitem
         id="menu_nvd_webhook_receivers"
-        name="Inbound Receivers"
+        name="📥 Inbound Receivers"
         parent="menu_nvd_webhooks"
         action="action_vuln_fw_nvd_webhook_receiver"
         sequence="20"/>
@@ -250,7 +300,7 @@
 
     <menuitem
         id="menu_nvd_webhook_logs"
-        name="Webhook Logs"
+        name="📜 Webhook Logs"
         parent="menu_nvd_webhooks"
         action="action_vuln_fw_nvd_webhook_log"
         sequence="30"/>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Windows Server 2022 Standard CPE Definition -->
+        <record id="cpe_windows_server_2022_standard" model="vuln.fw.nvd.cpe.dictionary">
+            <field name="cpe_uri">cpe:2.3:o:microsoft:windows_server_2022:-:standard:*:*:*:*:*</field>
+            <field name="cpe_name">cpe:/o:microsoft:windows_server_2022:standard</field>
+            <field name="title">Microsoft Windows Server 2022 Standard Edition</field>
+            <field name="part">o</field>
+            <field name="vendor">microsoft</field>
+            <field name="product">windows_server_2022</field>
+            <field name="version">-</field>
+            <field name="update">-</field>
+            <field name="edition">standard</field>
+            <field name="language">*</field>
+            <field name="sw_edition">*</field>
+            <field name="target_sw">*</field>
+            <field name="target_hw">*</field>
+            <field name="other">*</field>
+            <field name="deprecated">false</field>
+            <field name="active">true</field>
+        </record>
+
+        <!-- Dell PowerEdge R340 CPE Definition -->
+        <record id="cpe_dell_poweredge_r340" model="vuln.fw.nvd.cpe.dictionary">
+            <field name="cpe_uri">cpe:2.3:h:dell:poweredge_r340:-:*:*:*:*:*:*:*</field>
+            <field name="cpe_name">cpe:/h:dell:poweredge_r340</field>
+            <field name="title">Dell PowerEdge R340 Server</field>
+            <field name="part">h</field>
+            <field name="vendor">dell</field>
+            <field name="product">poweredge_r340</field>
+            <field name="version">-</field>
+            <field name="update">-</field>
+            <field name="edition">*</field>
+            <field name="language">*</field>
+            <field name="sw_edition">*</field>
+            <field name="target_sw">*</field>
+            <field name="target_hw">*</field>
+            <field name="other">*</field>
+            <field name="deprecated">false</field>
+            <field name="active">true</field>
+        </record>
+
+        <!-- Siemens SIMATIC S1500 CPE Definition -->
+        <record id="cpe_siemens_simatic_s1500" model="vuln.fw.nvd.cpe.dictionary">
+            <field name="cpe_uri">cpe:2.3:h:siemens:simatic_s1500:-:*:*:*:*:*:*:*</field>
+            <field name="cpe_name">cpe:/h:siemens:simatic_s1500</field>
+            <field name="title">Siemens SIMATIC S1500 PLC</field>
+            <field name="part">h</field>
+            <field name="vendor">siemens</field>
+            <field name="product">simatic_s1500</field>
+            <field name="version">-</field>
+            <field name="update">-</field>
+            <field name="edition">*</field>
+            <field name="language">*</field>
+            <field name="sw_edition">*</field>
+            <field name="target_sw">*</field>
+            <field name="target_hw">*</field>
+            <field name="other">*</field>
+            <field name="deprecated">false</field>
+            <field name="active">true</field>
+        </record>
+
+        <!-- Siemens SIMATIC S7-1500 CPU 1515-2 PN CPE Definition -->
+        <record id="cpe_siemens_6es7515_2am01_0ab0" model="vuln.fw.nvd.cpe.dictionary">
+            <field name="cpe_uri">cpe:2.3:h:siemens:6es7515-2am01-0ab0:-:*:*:*:*:*:*:*</field>
+            <field name="cpe_name">cpe:/h:siemens:6es7515-2am01-0ab0</field>
+            <field name="title">Siemens SIMATIC S7-1500 CPU 1515-2 PN</field>
+            <field name="part">h</field>
+            <field name="vendor">siemens</field>
+            <field name="product">6es7515-2am01-0ab0</field>
+            <field name="version">-</field>
+            <field name="update">-</field>
+            <field name="edition">*</field>
+            <field name="language">*</field>
+            <field name="sw_edition">*</field>
+            <field name="target_sw">*</field>
+            <field name="target_hw">*</field>
+            <field name="other">*</field>
+            <field name="deprecated">false</field>
+            <field name="active">true</field>
+        </record>
+    </data>
+</odoo>

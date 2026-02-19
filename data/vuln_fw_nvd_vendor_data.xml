@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Microsoft Vendor -->
+        <record id="vendor_microsoft" model="vuln.fw.nvd.vendor">
+            <field name="name">microsoft</field>
+            <field name="custom_name">Microsoft Corporation</field>
+            <field name="description">Microsoft Corporation - Leading provider of software, hardware, and cloud services including Windows, Office, Azure, and Xbox.</field>
+            <field name="website">https://www.microsoft.com</field>
+            <field name="active">true</field>
+        </record>
+
+        <!-- Dell Vendor -->
+        <record id="vendor_dell" model="vuln.fw.nvd.vendor">
+            <field name="name">dell</field>
+            <field name="custom_name">Dell Technologies</field>
+            <field name="description">Dell Technologies - Global provider of enterprise hardware, software, and services including PowerEdge servers, storage, and IT solutions.</field>
+            <field name="website">https://www.dell.com</field>
+            <field name="active">true</field>
+        </record>
+
+        <!-- Siemens Vendor -->
+        <record id="vendor_siemens" model="vuln.fw.nvd.vendor">
+            <field name="name">siemens</field>
+            <field name="custom_name">Siemens AG</field>
+            <field name="description">Siemens AG - Global technology company focused on electrification, automation, and digitalization, providing industrial automation, building technologies, and smart infrastructure solutions.</field>
+            <field name="website">https://www.siemens.com</field>
+            <field name="active">true</field>
+        </record>
+    </data>
+</odoo>

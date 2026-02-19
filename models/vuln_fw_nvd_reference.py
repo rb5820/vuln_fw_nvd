@@ -12,7 +12,7 @@ class VulnFwNvdReference(models.Model):
     Used across CPE products, vendors, CVEs, and other NVD data.
     """
     _name = 'vuln.fw.nvd.reference'
-    _description = 'NVD Reference/URL'
+    _description = 'National Vulnerability Database Reference/URL'
     _order = 'url'
     _rec_name = 'url'
     

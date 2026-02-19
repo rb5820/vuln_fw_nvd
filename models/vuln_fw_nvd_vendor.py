@@ -3,6 +3,7 @@
 Provides a canonical vendor registry for NVD-related data (CVE, CPE, etc.)
 """
 from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -20,6 +21,7 @@ class VulnFwNvdVendor(models.Model):
     _description = 'National Vulnerability Database Vendor (Shared)'
     _order = 'name'
     _rec_name = 'name'
+    _inherit = ['mail.thread']  # Enable mail threading and chatter
     
     # === CORE FIELDS ===
     name = fields.Char(
@@ -31,6 +33,7 @@ class VulnFwNvdVendor(models.Model):
     
     custom_name = fields.Char(
         string='Custom Name',
+        tracking=True,
         help='Your custom vendor name (e.g., Microsoft Corporation, Adobe Inc.)'
     )
     
@@ -38,6 +41,7 @@ class VulnFwNvdVendor(models.Model):
         string='Display Name',
         compute='_compute_display_name',
         store=True,
+        search='_search_display_name',
         help='Human-readable vendor name. Uses custom_name if available, otherwise name'
     )
     
@@ -48,6 +52,7 @@ class VulnFwNvdVendor(models.Model):
     
     website = fields.Char(
         string='Website',
+        tracking=True,
         help='Vendor official website'
     )
     
@@ -77,6 +82,7 @@ class VulnFwNvdVendor(models.Model):
     active = fields.Boolean(
         string='Active',
         default=True,
+        tracking=True,
         help='Inactive vendors are hidden from views'
     )
     
@@ -93,11 +99,12 @@ class VulnFwNvdVendor(models.Model):
         for record in self:
             record.product_count = len(record.product_ids)
     
+    @api.depends('name')
     def _compute_cpe_dictionary_count(self):
         """Count CPE dictionary entries linked to this vendor"""
         for record in self:
             count = self.env['vuln.fw.nvd.cpe.dictionary'].search_count([
-                ('main_vendor_id', '=', record.id)
+                ('vendor', '=', record.name)
             ])
             record.cpe_dictionary_count = count
     
@@ -111,6 +118,14 @@ class VulnFwNvdVendor(models.Model):
     def _search_display_name(self, operator, value):
         """Allow searching by display name"""
         return ['|', ('custom_name', operator, value), ('name', operator, value)]
+    
+    # === VALIDATION ===
+    @api.constrains('website')
+    def _check_website(self):
+        """Validate website URL format"""
+        for record in self:
+            if record.website and not (record.website.startswith('http://') or record.website.startswith('https://')):
+                raise ValidationError("Website must be a valid URL starting with http:// or https://")
     
     # === CONSTRAINTS ===
     _sql_constraints = [

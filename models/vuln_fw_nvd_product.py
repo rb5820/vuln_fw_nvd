@@ -20,6 +20,7 @@ class VulnFwNvdProduct(models.Model):
     _description = 'National Vulnerability Database Product (Shared)'
     _order = 'vendor_id, name'
     _rec_name = 'display_name'
+    _inherit = ['mail.thread']  # Enable mail threading and chatter
     
     # === CORE FIELDS ===
     name = fields.Char(
@@ -46,6 +47,7 @@ class VulnFwNvdProduct(models.Model):
     
     custom_name = fields.Char(
         string='Custom Name',
+        tracking=True,
         help='Your custom product name (e.g., Windows Server 2019)'
     )
     
@@ -53,6 +55,7 @@ class VulnFwNvdProduct(models.Model):
         string='Display Name',
         compute='_compute_display_name',
         store=True,
+        search='_search_display_name',
         help='Human-readable product name (vendor: product)'
     )
     
@@ -68,9 +71,13 @@ class VulnFwNvdProduct(models.Model):
             ('hardware', 'Hardware'),
             ('firmware', 'Firmware'),
             ('library', 'Library'),
+            ('driver', 'Driver'),
+            ('service', 'Service'),
+            ('container', 'Container'),
             ('other', 'Other'),
         ],
         string='Category',
+        tracking=True,
         help='Product category for classification'
     )
     
@@ -86,6 +93,7 @@ class VulnFwNvdProduct(models.Model):
     active = fields.Boolean(
         string='Active',
         default=True,
+        tracking=True,
         help='Inactive products are hidden from views'
     )
     
@@ -104,11 +112,12 @@ class VulnFwNvdProduct(models.Model):
             product_name = record.custom_name or record.name
             record.display_name = f"{vendor_name}: {product_name}"
     
+    @api.depends('name')
     def _compute_cpe_dictionary_count(self):
         """Count CPE dictionary entries linked to this product"""
         for record in self:
             count = self.env['vuln.fw.nvd.cpe.dictionary'].search_count([
-                ('main_product_id', '=', record.id)
+                ('product', '=', record.name)
             ])
             record.cpe_dictionary_count = count
     
@@ -138,6 +147,8 @@ class VulnFwNvdProduct(models.Model):
         if vals.get('name'):
             vals['name'] = vals['name'].lower().strip()
         return super().write(vals)
+    
+    # === FIELD PARAMETER VALIDATION ===
     
     # === HELPER METHODS ===
     @api.model
