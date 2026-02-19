@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- ===== VENDOR VIEWS ===== -->
+        
+        <!-- Vendor Tree View -->
+        <record id="view_vuln_fw_nvd_vendor_list" model="ir.ui.view">
+            <field name="name">vuln.fw.nvd.vendor.list</field>
+            <field name="model">vuln.fw.nvd.vendor</field>
+            <field name="arch" type="xml">
+                <list string="Vendors">
+                    <field name="name"/>
+                    <field name="custom_name"/>
+                    <field name="display_name"/>
+                    <field name="product_count" optional="show"/>
+                    <field name="cpe_dictionary_count" optional="show"/>
+                    <field name="website" optional="show"/>
+                    <field name="active" optional="show"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Vendor Form View -->
+        <record id="view_vuln_fw_nvd_vendor_form" model="ir.ui.view">
+            <field name="name">vuln.fw.nvd.vendor.form</field>
+            <field name="model">vuln.fw.nvd.vendor</field>
+            <field name="arch" type="xml">
+                <form string="Vendor">
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                        </div>
+                        
+                        <div class="oe_title">
+                            <h1>
+                                <field name="display_name" readonly="1"/>
+                            </h1>
+                        </div>
+                        
+                        <group>
+                            <group name="basic_info" string="Basic Information">
+                                <field name="name" required="1"/>
+                                <field name="custom_name"/>
+                                <field name="website"/>
+                                <field name="active"/>
+                            </group>
+                            <group name="statistics" string="Statistics">
+                                <field name="product_count" readonly="1"/>
+                            </group>
+                        </group>
+                        
+                        <group name="description" string="Description">
+                            <field name="description" nolabel="1" colspan="2"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Vendor Search View -->
+        <record id="view_vuln_fw_nvd_vendor_search" model="ir.ui.view">
+            <field name="name">vuln.fw.nvd.vendor.search</field>
+            <field name="model">vuln.fw.nvd.vendor</field>
+            <field name="arch" type="xml">
+                <search string="Vendor">
+                    <field name="name"/>
+                    <field name="custom_name"/>
+                    <field name="display_name"/>
+                    <field name="website"/>
+                    <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                    <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <group expand="0" string="Group By">
+                        <filter string="Active" name="group_active" context="{'group_by': 'active'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- ===== PRODUCT VIEWS ===== -->
+        
+        <!-- Product List View -->
+        <record id="view_vuln_fw_nvd_product_list" model="ir.ui.view">
+            <field name="name">vuln.fw.nvd.product.list</field>
+            <field name="model">vuln.fw.nvd.product</field>
+            <field name="arch" type="xml">
+                <list string="Products">
+                    <field name="vendor_id"/>
+                    <field name="name"/>
+                    <field name="custom_name" optional="show"/>
+                    <field name="display_name"/>
+                    <field name="category" optional="show"/>
+                    <field name="cpe_dictionary_count" optional="show"/>
+                    <field name="active" optional="show"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Product Form View -->
+        <record id="view_vuln_fw_nvd_product_form" model="ir.ui.view">
+            <field name="name">vuln.fw.nvd.product.form</field>
+            <field name="model">vuln.fw.nvd.product</field>
+            <field name="arch" type="xml">
+                <form string="Product">
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                        </div>
+                        
+                        <div class="oe_title">
+                            <h1>
+                                <field name="display_name" readonly="1"/>
+                            </h1>
+                        </div>
+                        
+                        <group>
+                            <group name="basic_info" string="Basic Information">
+                                <field name="vendor_id" required="1"/>
+                                <field name="name" required="1"/>
+                                <field name="custom_name"/>
+                                <field name="category"/>
+                                <field name="active"/>
+                            </group>
+                        </group>
+                        
+                        <group name="description" string="Description">
+                            <field name="description" nolabel="1" colspan="2"/>
+                        </group>
+                        
+
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Product Search View -->
+        <record id="view_vuln_fw_nvd_product_search" model="ir.ui.view">
+            <field name="name">vuln.fw.nvd.product.search</field>
+            <field name="model">vuln.fw.nvd.product</field>
+            <field name="arch" type="xml">
+                <search string="Product">
+                    <field name="name"/>
+                    <field name="custom_name"/>
+                    <field name="display_name"/>
+                    <field name="vendor_id"/>
+                    <field name="category"/>
+                    <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                    <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <group expand="0" string="Group By">
+                        <filter string="Vendor" name="group_vendor" context="{'group_by': 'vendor_id'}"/>
+                        <filter string="Category" name="group_category" context="{'group_by': 'category'}"/>
+                        <filter string="Active" name="group_active" context="{'group_by': 'active'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+    </data>
+</odoo>

@@ -2,7 +2,7 @@
 <odoo>
     
     <!-- NVD Reference Form View -->
-    <record id="view_nvd_reference_form" model="ir.ui.view">
+    <record id="view_vuln_fw_nvd_reference_form" model="ir.ui.view">
         <field name="name">vuln.fw.nvd.reference.form</field>
         <field name="model">vuln.fw.nvd.reference</field>
         <field name="arch" type="xml">
@@ -50,7 +50,7 @@
     </record>
     
     <!-- NVD Reference List View -->
-    <record id="view_nvd_reference_list" model="ir.ui.view">
+    <record id="view_vuln_fw_nvd_reference_list" model="ir.ui.view">
         <field name="name">vuln.fw.nvd.reference.list</field>
         <field name="model">vuln.fw.nvd.reference</field>
         <field name="arch" type="xml">
@@ -67,7 +67,7 @@
     </record>
     
     <!-- NVD Reference Search View -->
-    <record id="view_nvd_reference_search" model="ir.ui.view">
+    <record id="view_vuln_fw_nvd_reference_search" model="ir.ui.view">
         <field name="name">vuln.fw.nvd.reference.search</field>
         <field name="model">vuln.fw.nvd.reference</field>
         <field name="arch" type="xml">
@@ -93,21 +93,8 @@
         </field>
     </record>
     
-    <!-- NVD Reference Action -->
-    <record id="action_nvd_reference" model="ir.actions.act_window">
-        <field name="name">NVD References</field>
-        <field name="type">ir.actions.act_window</field>
-        <field name="res_model">vuln.fw.nvd.reference</field>
-        <field name="view_mode">list,form</field>
-        <field name="context">{'search_default_active': 1}</field>
-    </record>
+
     
-    <!-- Menu Item -->
-    <menuitem
-        id="menu_nvd_references"
-        name="🔗 References"
-        parent="vuln_fw_nvd.menu_nvd_root"
-        action="action_nvd_reference"
-        sequence="90"/>
+
 
 </odoo>

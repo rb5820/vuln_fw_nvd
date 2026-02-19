@@ -5,9 +5,9 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-class NVDSyncLog(models.Model):
+class VulnFwNvdSyncLog(models.Model):
     _name = 'vuln.fw.nvd.sync.log'
-    _description = 'NVD Synchronization Log'
+    _description = 'National Vulnerability Database Synchronization Log'
     _check_company_auto = True
     _order = 'sync_date desc'
 

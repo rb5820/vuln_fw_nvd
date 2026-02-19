@@ -2,9 +2,9 @@
 <odoo>
 
     <!-- NVD Importer Form View -->
-    <record id="view_nvd_connector_form" model="ir.ui.view">
-        <field name="name">nvd.connector.form</field>
-        <field name="model">vuln.fw.nvd.connector</field>
+    <record id="view_vuln_fw_nvd_api_connector_form" model="ir.ui.view">
+        <field name="name">vuln.fw.nvd.api.connector.form</field>
+        <field name="model">vuln.fw.nvd.api.connector</field>
         <field name="arch" type="xml">
             <form string="National Vulnerability Database Connector">
                 <sheet>
@@ -115,9 +115,9 @@
     </record>
 
     <!-- NVD Connector List View -->
-    <record id="view_nvd_connector_list" model="ir.ui.view">
-        <field name="name">nvd.connector.list</field>
-        <field name="model">vuln.fw.nvd.connector</field>
+    <record id="view_vuln_fw_nvd_api_connector_list" model="ir.ui.view">
+        <field name="name">vuln.fw.nvd.api.connector.list</field>
+        <field name="model">vuln.fw.nvd.api.connector</field>
         <field name="arch" type="xml">
             <list string="National Vulnerability Database Connectors">
                 <field name="name"/>
@@ -132,29 +132,8 @@
         </field>
     </record>
 
-    <!-- NVD Connector Action -->
-    <record id="action_nvd_connector" model="ir.actions.act_window">
-        <field name="name">National Vulnerability Database Connector</field>
-        <field name="res_model">vuln.fw.nvd.connector</field>
-        <field name="view_mode">list,form</field>
-        <field name="context">{}</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Create your first National Vulnerability Database Connector to start importing vulnerability data from NIST into Odoo.
-            </p>
-            <p>
-                Set up National Vulnerability Database connectors to automatically 
-                synchronize vulnerability data from NIST into your Odoo system.
-            </p>
-        </field>
-    </record>
 
-    <!-- Menu Item for NVD Connectors -->
-    <menuitem 
-        id="menu_nvd_connectors"
-        name="🔗 NVD Connectors"
-        parent="menu_nvd_config"
-        action="action_nvd_connector"
-        sequence="10"/>
+
+
 
 </odoo>

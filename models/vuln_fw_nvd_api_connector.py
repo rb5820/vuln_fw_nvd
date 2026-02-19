@@ -10,10 +10,10 @@ from datetime import datetime, timedelta
 _logger = logging.getLogger(__name__)
 
 
-class NvdConnector(models.Model):
+class VulnFwNvdApiConnector(models.Model):
     """NVD API Connector - Core API connector for NVD vulnerability and CPE data"""
-    _name = 'vuln.fw.nvd.connector'
-    _description = 'NVD API Connector'
+    _name = 'vuln.fw.nvd.api.connector'
+    _description = 'National Vulnerability Database API Connector'
     _inherit = ['mail.thread']
     _check_company_auto = True
     _sql_constraints = [
@@ -210,7 +210,7 @@ class NvdConnector(models.Model):
         for vals in vals_list:
             if vals.get('is_default'):
                 self.search([('is_default', '=', True)]).write({'is_default': False})
-        return super(NvdConnector, self).create(vals_list)
+        return super(VulnFwNvdApiConnector, self).create(vals_list)
     
     def write(self, vals):
         """Auto-unset other defaults when setting a connector as default"""
@@ -219,7 +219,7 @@ class NvdConnector(models.Model):
                 ('is_default', '=', True),
                 ('id', 'not in', self.ids)
             ]).write({'is_default': False})
-        return super(NvdConnector, self).write(vals)
+        return super(VulnFwNvdApiConnector, self).write(vals)
     
     def _aggregate_child_metrics(self):
         """Aggregate performance metrics from all child connectors (CVE and CPE)"""

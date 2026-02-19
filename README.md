@@ -1,152 +1,248 @@
-# Vulnerability Source - NVD Base
+# Vulnerability Framework - National Vulnerability Database
 
-A simplified base module for National Vulnerability Database (NVD) integration in Odoo 18.
+Advanced NVD API integration module for comprehensive vulnerability management in Odoo 18.
 
 ## Overview
 
-This module provides the foundational NVD integration capabilities and serves as the base for specialized NVD extensions. It has been simplified to focus on core functionality, with advanced features moved to dedicated extension modules.
+This module provides complete National Vulnerability Database (NVD) integration with advanced features including zero trust webhook systems, comprehensive CPE/CVE data management, and robust API connectivity. It includes both core functionality and specialized webhook integrations for real-time vulnerability data processing.
 
 ## Features
 
-### 🔧 Core Functionality
-- **NVD Data Source**: Basic NVD source definition and configuration
-- **Simple API Integration**: Basic NVD API v2.0 connectivity
-- **Basic Vulnerability Import**: Creates standard vulnerability records from NVD CVE data
-- **Sync Logging**: Tracks synchronization activities and results
-- **Rate Limiting**: Respects NVD API rate limits
+### 🔧 Core NVD Integration
+- **Advanced API Connectivity**: Full NVD API v2.0 integration with authentication & rate limiting
+- **Multi-endpoint Support**: CVE, CPE, and vulnerability data endpoints
+- **Comprehensive Sync Operations**: Sample, full, and scheduled synchronization modes
+- **Robust Error Handling**: Advanced sync logging with detailed error tracking
 
-### 📊 Basic Data Processing
-- **CVE Import**: Creates vulnerability records with basic CVE information
-- **CVSS Scoring**: Extracts basic CVSS scores (v3.1, v3.0, v2.0)
-- **Severity Mapping**: Maps CVSS scores to severity levels
-- **Update Detection**: Simple update detection based on modification dates
+### 🔒 Zero Trust Webhook System
+- **Secure Webhook Processing**: Zero trust architecture for external webhook integration
+- **Payload Queueing**: Automatic payload queuing with blocked host tracking
+- **Host Management**: Allowed/blocked host management system
+- **CPE 2.3 URI Processing**: Advanced CPE processing through webhook endpoints
+
+### 📊 Data Management
+- **CPE Dictionary**: Complete CPE 2.3 dictionary with vendor/product correlation
+- **CVE Database**: Comprehensive CVE data with timeline tracking
+- **Reference Management**: NVD reference links and documentation tracking
+- **Sync Logging**: Detailed synchronization activity logs with performance metrics
+
+### 🎯 Advanced Features
+- **Dashboard Views**: Real-time vulnerability statistics and monitoring
+- **Vendor/Product Management**: Structured vendor and product cataloging
+- **Webhook Integration**: External system integration capabilities
+- **Migration Tools**: Database migration and data transformation utilities
 
 ## Architecture
 
-### Models
-- **`vuln.source.nvd.importer`**: Basic NVD importer configuration
-- **`vuln.fw.nvd.sync.log`**: Synchronization logging and tracking
+### Core Models
+- **`VulnFwNvdApiConnector`**: Advanced NVD API connector with authentication and rate limiting
+- **`VulnFwNvdSyncLog`**: Comprehensive synchronization logging and performance tracking
+- **`VulnFwNvdReference`**: NVD reference links and documentation management
+- **`VulnFwNvdCpeDictionary`**: CPE 2.3 dictionary with vendor/product correlation
+- **`VulnFwNvdCveDictionary`**: CVE database with timeline and severity tracking
 
-### Specialized Extensions
-For advanced functionality, install the specialized extension modules:
+### Webhook System
+- **`VulnFwNvdWebhook`**: Core webhook configuration and management
+- **`VulnFwNvdWebhookReceiver`**: Zero trust webhook receiver with validation
+- **`VulnFwNvdWebhookPayloadQueue`**: Payload queueing system for blocked hosts
+- **`VulnFwNvdWebhookAllowedHost`**: Whitelist management for trusted hosts
+- **`VulnFwNvdWebhookBlockedHost`**: Security tracking for blocked hosts
+- **`VulnFwNvdWebhookLog`**: Comprehensive webhook activity logging
 
-- **`vuln_fw_nvd_cpe`**: CPE (Common Platform Enumeration) specific features
-  - Asset matching and CPE dictionary management
-  - CPE-based vulnerability correlation
-  - Asset inventory integration
-
-- **`vuln_fw_nvd_cve`**: CVE (Common Vulnerabilities and Exposures) specific features
-  - Advanced CVE analytics and risk assessment
-  - Threat intelligence integration
-  - Timeline tracking and collaboration tools
-  - Advanced reporting and dashboards
+### Data Management
+- **`VulnFwNvdVendor`**: Structured vendor information management
+- **`VulnFwNvdProduct`**: Product cataloging with vendor correlation
+- **`MigrationVendorProduct`**: Database migration utilities
 
 ## Installation
 
 ### Prerequisites
 - Odoo 18.0+
-- `vuln_fw_core` module (base vulnerability management)
 - Python packages: `requests`, `python-dateutil`
+- Base Odoo modules: `base`, `mail`
 
 ### Installation Steps
-1. Install the base module through the Odoo interface
-2. Configure the NVD data source
-3. Optionally install specialized extension modules for advanced features
+1. Install the module through the Odoo interface
+2. Configure NVD API connector with optional API key
+3. Set up webhook receivers for real-time integration
+4. Configure allowed hosts for zero trust webhook system
 
 ## Configuration
 
-### Basic Setup
-1. The module automatically creates an NVD data source
-2. Configure an NVD importer instance
-3. Optionally set an API key for increased rate limits
-4. Run manual synchronization or set up scheduled jobs
+### NVD API Setup
+1. Navigate to **Vulnerability Framework → Configuration → NVD API Connectors**
+2. Create or configure the API connector
+3. Set NVD API key for increased rate limits (optional)
+4. Configure sync schedules and data retention policies
+
+### Zero Trust Webhook System
+1. Go to **Vulnerability Framework → Configuration → Webhook Receivers**
+2. Configure webhook endpoints and authentication
+3. Set up allowed host whitelist for security
+4. Enable payload queueing for blocked host recovery
 
 ### API Configuration
-- **API Endpoint**: Uses NVD API v2.0 (https://services.nvd.nist.gov/rest/json/cves/2.0)
+- **API Endpoint**: NVD API v2.0 (https://services.nvd.nist.gov/rest/json/cves/2.0)
 - **Rate Limits**: 10 requests per minute (50 with API key)
-- **Data Format**: JSON responses from NVD
+- **Data Format**: JSON responses with CPE 2.3 URI support
+- **Webhook Endpoints**: `/webhook/nvd/cpe` for external integrations
 
 ## Usage
 
 ### Manual Synchronization
 ```python
-# Get importer instance
-importer = self.env['vuln.source.nvd.importer'].search([('active', '=', True)], limit=1)
+# Get API connector instance
+connector = self.env['vuln.fw.nvd.api.connector'].search([('active', '=', True)], limit=1)
 
 # Sync recent CVEs (last 7 days)
 start_date = datetime.now() - timedelta(days=7)
-result = importer.sync_from_nvd(start_date=start_date)
+result = connector.sync_nvd_data(start_date=start_date)
+```
+
+### Webhook Integration
+```python
+# Process webhook payload
+webhook_data = {
+    'cpe_uri': 'cpe:2.3:a:vendor:product:version:*:*:*:*:*:*:*',
+    'action': 'vulnerability_update',
+    'timestamp': datetime.now().isoformat()
+}
+
+# Send to webhook endpoint
+response = requests.post(
+    'http://your-odoo.com/webhook/nvd/cpe',
+    json=webhook_data,
+    headers={'Content-Type': 'application/json'}
+)
 ```
 
 ### Automated Synchronization
-Set up scheduled actions (cron jobs) to automatically sync NVD data:
-- Daily sync for recent CVEs
-- Weekly full sync for comprehensive updates
-- Error handling and notification
+Configure scheduled actions through **Settings → Technical → Scheduled Actions**:
+- **Daily CVE Sync**: Recent vulnerability updates
+- **Weekly Full Sync**: Comprehensive database refresh
+- **Webhook Processing**: Real-time payload queue processing
 
 ## Data Flow
 
-1. **NVD API Call**: Fetch CVE data from NVD API v2.0
-2. **Basic Processing**: Extract essential CVE information
-3. **Vulnerability Creation**: Create/update standard vulnerability records
-4. **Logging**: Track synchronization results and statistics
-5. **Extension Processing**: Specialized modules can extend the imported data
+1. **NVD API Integration**: Advanced multi-endpoint data retrieval from NVD API v2.0
+2. **Zero Trust Webhook Processing**: Secure external data reception with host validation
+3. **Comprehensive Data Processing**: CPE 2.3 URI parsing, CVE timeline tracking
+4. **Database Management**: Structured storage with vendor/product correlation
+5. **Payload Queueing**: Automatic queuing for blocked hosts with recovery processing
+6. **Dashboard Analytics**: Real-time statistics and vulnerability monitoring
+7. **Sync Logging**: Detailed operation tracking with performance metrics
 
-## Limitations
+## Zero Trust Security Features
 
-This base module intentionally provides minimal functionality:
-- **No Advanced Analytics**: Use `vuln_fw_nvd_cve` for analytics
-- **No CPE Matching**: Use `vuln_fw_nvd_cpe` for asset correlation
-- **Basic CVSS Parsing**: Only extracts base scores, not detailed metrics
+### Host Validation
+- **Whitelist Management**: Configure trusted hosts for webhook access
+- **Automatic Blocking**: Block suspicious or unauthorized webhook attempts
+- **Payload Queueing**: Queue payloads from blocked hosts for later processing
+- **Recovery Processing**: Process queued payloads when hosts are unblocked
+
+### Security Logging
+- **Webhook Activity**: Track all webhook requests and responses
+- **Security Events**: Log blocked attempts and security violations
+- **Access Patterns**: Monitor host access patterns and behavior
 - **Simple UI**: No advanced views or dashboards
 
 ## Development
 
-### Extending the Base Module
-The base module provides hooks for extension modules:
+### Extending the Module
+The module provides comprehensive APIs for extension:
 
 ```python
-# Extension modules can inherit from the importer
-class ExtendedImporter(models.Model):
-    _inherit = 'vuln.source.nvd.importer'
+# Extend API connector functionality
+class CustomNvdConnector(models.Model):
+    _inherit = 'vuln.fw.nvd.api.connector'
     
-    def _post_process_vulnerability(self, vulnerability, nvd_data):
-        # Add custom processing logic
-        pass
+    def _post_process_cve_data(self, cve_data):
+        # Add custom CVE processing logic
+        super()._post_process_cve_data(cve_data)
+        # Custom processing here
 ```
 
-### Adding Custom Processing
-Extension modules can add processing steps during import:
-- Override processing methods
-- Add custom fields to vulnerability records
-- Implement specialized data extraction
+### Webhook Integration
+```python
+# Custom webhook processor
+class CustomWebhookProcessor(models.Model):
+    _inherit = 'vuln.fw.nvd.webhook.receiver'
+    
+    def process_custom_payload(self, payload):
+        # Implement custom payload processing
+        if self._validate_payload_security(payload):
+            return self._process_secure_payload(payload)
+        else:
+            self._queue_blocked_payload(payload)
+```
+
+### Adding Custom Views
+Extend dashboard and management views:
+- Override existing view records with `vuln_fw_nvd_*` naming convention
+- Add custom actions following `action_vuln_fw_nvd_*` pattern
+- Implement specialized reporting views
 
 ## Migration Notes
 
-This module replaces the previous complex NVD module with:
-- **Simplified Models**: Removed complex CVSS parsing models
-- **Focused Functionality**: Core import functionality only
-- **Extension Architecture**: Specialized features moved to extension modules
+This module represents a complete refactoring with:
+- **Consistent Naming**: All components follow `vuln_fw_nvd_*` naming convention
+- **Zero Trust Architecture**: Advanced webhook security with payload queueing
+- **Comprehensive Models**: Full CPE/CVE data management with correlation
+- **Advanced API Integration**: Multi-endpoint support with robust error handling
 
 ## Troubleshooting
 
 ### Common Issues
-1. **API Rate Limits**: Configure API key or adjust sync frequency
-2. **Network Connectivity**: Check NVD API accessibility
-3. **Missing Extensions**: Install appropriate extension modules for advanced features
+1. **API Rate Limits**: Configure NVD API key or adjust sync frequency
+2. **Webhook Security**: Verify allowed host configuration for zero trust system
+3. **Payload Queue**: Monitor blocked host recovery and queue processing
+4. **Network Connectivity**: Check NVD API and webhook endpoint accessibility
 
-### Logging
-Enable debug logging to troubleshoot issues:
+### Security Considerations
+- **Webhook Endpoints**: Ensure proper firewall configuration for webhook access
+- **Host Whitelisting**: Regularly review and update allowed host lists
+- **Payload Validation**: Monitor webhook logs for suspicious activity
+- **Queue Management**: Set appropriate queue retention and processing policies
+
+### Performance Tuning
+- **Sync Frequency**: Balance data freshness with API rate limits
+- **Batch Processing**: Configure appropriate batch sizes for large datasets
+- **Index Optimization**: Ensure database indexes on frequently queried fields
+- **Queue Processing**: Optimize payload queue processing intervals
+
+### Logging and Debugging
+Enable comprehensive logging for troubleshooting:
 ```ini
 [options]
 log_level = debug
 ```
+
+Monitor specific components:
+- **NVD Sync**: Check sync logs for API connectivity issues
+- **Webhook Processing**: Monitor webhook logs for security events
+- **Queue Management**: Track payload queue processing status
+- **Database Operations**: Monitor database performance and indexing
 
 ## License
 LGPL-3.0
 
 ---
 
-For advanced functionality, install:
-- [vuln_fw_nvd_cpe](../vuln_fw_nvd_cpe/README.md) - CPE-specific features
-- [vuln_fw_nvd_cve](../vuln_fw_nvd_cve/README.md) - CVE enhancements and analytics
+## Module Structure
+
+```
+vuln_fw_nvd/
+├── models/                     # Core data models
+│   ├── vuln_fw_nvd_api_connector.py
+│   ├── vuln_fw_nvd_webhook_*.py
+│   └── ...
+├── views/                      # User interface definitions
+│   ├── vuln_fw_nvd_dashboard_views.xml
+│   ├── vuln_fw_nvd_webhook_*.xml
+│   └── menus.xml
+├── controllers/                # HTTP controllers
+│   └── vuln_fw_nvd_webhooks_controller.py
+├── data/                       # Default data and configuration
+├── security/                   # Access control
+└── static/description/         # Module assets
+```

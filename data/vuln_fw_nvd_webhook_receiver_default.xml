@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Default CPE Webhook Receiver Configuration -->
+        <record id="vuln_fw_nvd_cpe_webhook_receiver_default" model="vuln.fw.nvd.webhook.receiver">
+            <field name="name">CPE 2.3 URI Webhook Receiver</field>
+            <field name="description">Default webhook receiver for CPE 2.3 URIs from external systems (lansweeper_connector, CMDB, etc.)</field>
+            <field name="active">True</field>
+            <field name="webhook_token">change_me_to_secure_token</field>
+            <field name="allowed_sources">lansweeper_connector
+external_cmdb
+custom_integration</field>
+            <field name="validate_signature">False</field>
+        </record>
+    </data>
+</odoo>

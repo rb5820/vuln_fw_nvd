@@ -1,7 +1,13 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_vuln_fw_nvd_connector_user,vuln.fw.nvd.connector.user,model_vuln_fw_nvd_connector,group_nvd_user,1,0,0,0
-access_vuln_fw_nvd_connector_manager,vuln.fw.nvd.connector.manager,model_vuln_fw_nvd_connector,group_nvd_manager,1,1,1,1
-access_vuln_fw_nvd_connector_admin,vuln.fw.nvd.connector.admin,model_vuln_fw_nvd_connector,base.group_system,1,1,1,1
+access_vuln_fw_nvd_vendor_user,vuln.fw.nvd.vendor.user,model_vuln_fw_nvd_vendor,group_nvd_user,1,0,0,0
+access_vuln_fw_nvd_vendor_manager,vuln.fw.nvd.vendor.manager,model_vuln_fw_nvd_vendor,group_nvd_manager,1,1,1,1
+access_vuln_fw_nvd_vendor_admin,vuln.fw.nvd.vendor.admin,model_vuln_fw_nvd_vendor,base.group_system,1,1,1,1
+access_vuln_fw_nvd_product_user,vuln.fw.nvd.product.user,model_vuln_fw_nvd_product,group_nvd_user,1,0,0,0
+access_vuln_fw_nvd_product_manager,vuln.fw.nvd.product.manager,model_vuln_fw_nvd_product,group_nvd_manager,1,1,1,1
+access_vuln_fw_nvd_product_admin,vuln.fw.nvd.product.admin,model_vuln_fw_nvd_product,base.group_system,1,1,1,1
+access_vuln_fw_nvd_connector_user,vuln.fw.nvd.api.connector.user,model_vuln_fw_nvd_api_connector,group_nvd_user,1,0,0,0
+access_vuln_fw_nvd_connector_manager,vuln.fw.nvd.api.connector.manager,model_vuln_fw_nvd_api_connector,group_nvd_manager,1,1,1,1
+access_vuln_fw_nvd_connector_admin,vuln.fw.nvd.api.connector.admin,model_vuln_fw_nvd_api_connector,base.group_system,1,1,1,1
 access_vuln_fw_nvd_reference_user,vuln.fw.nvd.reference.user,model_vuln_fw_nvd_reference,group_nvd_user,1,0,0,0
 access_vuln_fw_nvd_reference_manager,vuln.fw.nvd.reference.manager,model_vuln_fw_nvd_reference,group_nvd_manager,1,1,1,1
 access_vuln_fw_nvd_reference_admin,vuln.fw.nvd.reference.admin,model_vuln_fw_nvd_reference,base.group_system,1,1,1,1
@@ -29,3 +35,9 @@ access_vuln_fw_nvd_webhook_receiver_admin,vuln.fw.nvd.webhook.receiver.admin,mod
 access_vuln_fw_nvd_webhook_receiver_log_user,vuln.fw.nvd.webhook.receiver.log.user,model_vuln_fw_nvd_webhook_receiver_log,base.group_user,1,0,0,0
 access_vuln_fw_nvd_webhook_receiver_log_manager,vuln.fw.nvd.webhook.receiver.log.manager,model_vuln_fw_nvd_webhook_receiver_log,group_nvd_manager,1,1,1,1
 access_vuln_fw_nvd_webhook_receiver_log_admin,vuln.fw.nvd.webhook.receiver.log.admin,model_vuln_fw_nvd_webhook_receiver_log,base.group_system,1,1,1,1
+access_vuln_fw_nvd_webhook_allowed_host_user,vuln.fw.nvd.webhook.allowed.host.user,model_vuln_fw_nvd_webhook_allowed_host,base.group_user,1,0,0,0
+access_vuln_fw_nvd_webhook_allowed_host_manager,vuln.fw.nvd.webhook.allowed.host.manager,model_vuln_fw_nvd_webhook_allowed_host,group_nvd_manager,1,1,1,1
+access_vuln_fw_nvd_webhook_allowed_host_admin,vuln.fw.nvd.webhook.allowed.host.admin,model_vuln_fw_nvd_webhook_allowed_host,base.group_system,1,1,1,1
+access_vuln_fw_nvd_webhook_blocked_host_user,vuln.fw.nvd.webhook.blocked.host.user,model_vuln_fw_nvd_webhook_blocked_host,base.group_user,1,0,0,0
+access_vuln_fw_nvd_webhook_blocked_host_manager,vuln.fw.nvd.webhook.blocked.host.manager,model_vuln_fw_nvd_webhook_blocked_host,group_nvd_manager,1,1,1,1
+access_vuln_fw_nvd_webhook_blocked_host_admin,vuln.fw.nvd.webhook.blocked.host.admin,model_vuln_fw_nvd_webhook_blocked_host,base.group_system,1,1,1,1

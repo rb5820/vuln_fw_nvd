@@ -22,6 +22,7 @@ class VulnFwNvdWebhookPayloadQueue(models.Model):
     # === STATUS & STATE ===
     state = fields.Selection([
         ('pending', '⏳ Pending'),
+        ('blocked', '🚫 Blocked (Zero Trust)'),
         ('processing', '🔄 Processing'),
         ('success', '✅ Success'),
         ('error', '❌ Error'),
@@ -356,3 +357,107 @@ class VulnFwNvdWebhookPayloadQueue(models.Model):
                 body=f"<p>Review completed by <strong>{self.env.user.name}</strong>. Marked for processing.</p>",
                 subtype_xmlid='mail.mt_comment'
             )
+    
+    def _process_payload_async(self):
+        """Process webhook payload asynchronously"""
+        self.ensure_one()
+        
+        if self.state != 'pending':
+            _logger.warning(f"Payload queue {self.id} is not in pending state: {self.state}")
+            return
+        
+        try:
+            # Mark as processing
+            self.write({
+                'state': 'processing',
+                'processing_started': fields.Datetime.now()
+            })
+            
+            # Parse payload
+            payload_data = json.loads(self.payload) if self.payload else {}
+            _logger.info(f"Processing queued payload {self.id} from source: {self.source_ip}")
+            
+            # Determine processing based on payload content
+            if payload_data.get('cpe_uri'):
+                result = self._process_cpe_payload(payload_data)
+            else:
+                result = self._process_generic_payload(payload_data)
+            
+            # Mark as successful
+            self.write({
+                'state': 'success',
+                'processing_completed': fields.Datetime.now(),
+                'process_result': json.dumps(result)
+            })
+            
+            _logger.info(f"Successfully processed queued payload {self.id}")
+            
+        except Exception as e:
+            self.retry_count += 1
+            error_msg = f"Async processing failed: {str(e)}"
+            _logger.error(f"Failed to process queued payload {self.id}: {error_msg}")
+            
+            if self.retry_count >= self.max_retries:
+                self.write({
+                    'state': 'error',
+                    'processing_completed': fields.Datetime.now(),
+                    'error_message': error_msg
+                })
+            else:
+                self.write({
+                    'state': 'retry',
+                    'error_message': error_msg
+                })
+                # Schedule retry
+                self.with_delay(eta=300)._process_payload_async()  # Retry in 5 minutes
+    
+    def _process_cpe_payload(self, payload_data):
+        """Process CPE-specific payload"""
+        token = payload_data.get('token')
+        cpe_uri = payload_data.get('cpe_uri')
+        source = payload_data.get('source', 'external_system')
+        metadata = payload_data.get('metadata', {})
+        
+        if not token or not cpe_uri:
+            raise ValueError(f"Missing required fields - Token: {bool(token)}, CPE: {bool(cpe_uri)}")
+        
+        # Validate token against receiver
+        if self.receiver_id.webhook_token != token:
+            raise ValueError(f"Invalid webhook token")
+        
+        # Process CPE URI
+        cpe_dict = self.env['vuln.fw.nvd.cpe.dictionary'].process_cpe_uri(
+            cpe_uri, 
+            source=source,
+            metadata=metadata
+        )
+        
+        if cpe_dict:
+            return {
+                'status': 'success',
+                'message': 'CPE processed successfully',
+                'cpe_id': cpe_dict.id,
+                'cpe_name': cpe_dict.cpe_name,
+                'vendor': cpe_dict.vendor,
+                'product': cpe_dict.product,
+                'version': cpe_dict.version
+            }
+        else:
+            raise ValueError(f"Failed to process CPE URI: {cpe_uri}")
+    
+    def _process_generic_payload(self, payload_data):
+        """Process generic webhook payload"""
+        # Handle non-CPE payloads (like tests)
+        if payload_data.get('test') is True:
+            return {
+                'status': 'success',
+                'message': 'Test payload processed',
+                'test_detected': True
+            }
+        
+        # Add other payload type handling here
+        return {
+            'status': 'success',
+            'message': 'Generic payload processed',
+            'payload_type': 'unknown'
+        }

@@ -2,7 +2,7 @@
 <odoo>
     <data>
         <!-- Demo NVD Connector -->
-        <record id="demo_nvd_connector" model="vuln.fw.nvd.connector">
+        <record id="vuln_fw_nvd_api_connector_demo" model="vuln.fw.nvd.api.connector">
             <field name="name">Demo National Vulnerability Database Connector</field>
             <field name="framework_id" ref="vuln_fw_core.demo_source_nvd"/>
             <field name="active">True</field>

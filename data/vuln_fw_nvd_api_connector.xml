@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">       
+    <data noupdate="1">
         <!-- Default National Vulnerability Database CVE Connector -->
-        <record id="vuln_fw_nvd_cve_api_connector_default" model="vuln.fw.nvd.connector">
+        <record id="vuln_fw_nvd_cve_api_connector_default" model="vuln.fw.nvd.api.connector">
             <field name="name">Default National Vulnerability Database API Connector</field>
             <field name="api_url">https://services.nvd.nist.gov/rest/json</field>
             <field name="connector_active">False</field>
-            <field name="debug_mode">True</field>      
+            <field name="debug_mode">True</field>
             <field name="active">True</field>
         </record>
     </data>

@@ -11,7 +11,7 @@ class VulnFwNvdWebhookReceiverLog(models.Model):
     Base Webhook Receiver Log - Tracks all received webhook events.
     """
     _name = 'vuln.fw.nvd.webhook.receiver.log'
-    _description = 'NVD Webhook Receiver Log'
+    _description = 'National Vulnerability Database Webhook Receiver Log'
     _inherit = ['mail.thread']
     _order = 'create_date desc'
     _rec_name = 'receiver_id'
@@ -48,10 +48,29 @@ class VulnFwNvdWebhookReceiverLog(models.Model):
     # === PROCESSING INFORMATION ===
     
     status = fields.Selection([
-        ('success', 'Success'),
-        ('error', 'Error'),
-    ], string='Status', default='success', tracking=True,
+        ('received', '📥 Received'),
+        ('queued', '⏳ Queued'),
+        ('test_response', '🧪 Test Response'),
+        ('blocked', '🚫 Blocked'),
+        ('success', '✅ Success'),
+        ('error', '❌ Error'),
+    ], string='Status', default='received', tracking=True,
        help='Status of webhook processing')
+    
+    response = fields.Text(
+        string='Response Payload',
+        help='Outbound response payload sent back to client'
+    )
+    
+    endpoint = fields.Char(
+        string='Endpoint',
+        help='Webhook endpoint that handled the request'
+    )
+    
+    notes = fields.Text(
+        string='Notes',
+        help='Additional processing notes or details'
+    )
     
     error_message = fields.Text(
         string='Error Message',

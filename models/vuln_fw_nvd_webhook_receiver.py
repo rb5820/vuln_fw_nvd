@@ -13,7 +13,7 @@ class VulnFwNvdWebhookReceiver(models.Model):
     Base Webhook Receiver - Configuration for receiving inbound webhooks from external systems.
     """
     _name = 'vuln.fw.nvd.webhook.receiver'
-    _description = 'NVD Webhook Receiver'
+    _description = 'National Vulnerability Database Webhook Receiver'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'name'
     
@@ -29,6 +29,11 @@ class VulnFwNvdWebhookReceiver(models.Model):
     description = fields.Text(
         string='Description',
         help='Description of what this receiver does'
+    )
+    
+    endpoint_url = fields.Char(
+        string='Endpoint URL',
+        help='Webhook endpoint URL path (e.g., /api/cpe/webhook)'
     )
     
     active = fields.Boolean(
@@ -48,8 +53,33 @@ class VulnFwNvdWebhookReceiver(models.Model):
     )
     
     allowed_sources = fields.Text(
-        string='Allowed Sources (IPs)',
-        help='Comma-separated list of allowed IP addresses. Leave empty to allow all.'
+        string='Allowed Sources (IPs) - DEPRECATED',
+        help='DEPRECATED: Use Allowed Hosts table instead. Comma-separated list of allowed IP addresses.'
+    )
+    
+    # === ZERO TRUST HOST ALLOWLIST ===
+    
+    allowed_host_ids = fields.Many2many(
+        'vuln.fw.nvd.webhook.allowed.host',
+        'webhook_base_receiver_allowed_host_rel',
+        'receiver_id',
+        'allowed_host_id',
+        string='Allowed Hosts',
+        help='Hosts allowed to send webhooks to this receiver (Zero Trust)'
+    )
+    
+    enforce_host_allowlist = fields.Boolean(
+        string='Enforce Host Allowlist',
+        default=True,
+        tracking=True,
+        help='Enable zero trust host validation. Disable only for development.'
+    )
+    
+    internal_only = fields.Boolean(
+        string='Internal Only',
+        default=True,
+        tracking=True,
+        help='If enabled, only authenticated Odoo users can send data to this webhook. External systems must disable this.'
     )
     
     validate_signature = fields.Boolean(
@@ -218,6 +248,58 @@ class VulnFwNvdWebhookReceiver(models.Model):
         ).hexdigest()
         
         return hmac.compare_digest(signature, expected_signature)
+    
+    def check_host_access(self, source_ip):
+        """
+        Check if a host is allowed to access this webhook receiver (Zero Trust).
+        
+        Args:
+            source_ip (str): IP address of the requesting host
+            
+        Returns:
+            tuple: (allowed: bool, matched_host: record or None, reason: str)
+        """
+        self.ensure_one()
+        
+        # If host allowlist enforcement is disabled (development mode)
+        if not self.enforce_host_allowlist:
+            _logger.debug(f"Host allowlist enforcement disabled for receiver {self.name}")
+            return True, None, "Host allowlist enforcement disabled"
+        
+        # Check against allowed hosts
+        if self.allowed_host_ids:
+            for allowed_host in self.allowed_host_ids:
+                if allowed_host.active and allowed_host._matches_host_pattern(source_ip):
+                    allowed_host._update_request_stats('allowed')
+                    _logger.info(f"Host {source_ip} allowed by rule: {allowed_host.name}")
+                    return True, allowed_host, f"Matched allowlist rule: {allowed_host.name}"
+        
+        # Fallback to legacy allowed_sources field (deprecated)
+        if self.allowed_sources:
+            allowed_ips = [ip.strip() for ip in self.allowed_sources.split(',') if ip.strip()]
+            if source_ip in allowed_ips:
+                _logger.warning(f"Host {source_ip} allowed by deprecated allowed_sources field")
+                return True, None, "Matched deprecated allowed_sources (please migrate to allowed hosts)"
+        
+        # Zero trust - deny by default
+        _logger.warning(f"Host {source_ip} blocked - not in allowlist for receiver {self.name}")
+        return False, None, f"Host {source_ip} not in allowlist (Zero Trust)"
+    
+    def setup_default_localhost_access(self):
+        """Set up default localhost access for development."""
+        self.ensure_one()
+        
+        # Create localhost allowed host if it doesn't exist
+        localhost_host = self.env['vuln.fw.nvd.webhook.allowed.host'].create_default_localhost_rule(
+            receiver_ids=[self.id]
+        )
+        
+        # Link to this receiver
+        if localhost_host.id not in self.allowed_host_ids.ids:
+            self.allowed_host_ids = [(4, localhost_host.id)]
+        
+        _logger.info(f"Set up localhost access for receiver {self.name}")
+        return localhost_host
     
     def _process_payload(self, payload):
         """

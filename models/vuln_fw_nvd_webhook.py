@@ -16,7 +16,7 @@ class VulnFwNvdWebhook(models.Model):
     Sends vulnerability framework updates to external systems.
     """
     _name = 'vuln.fw.nvd.webhook'
-    _description = 'NVD Webhook Configuration'
+    _description = 'National Vulnerability Database Webhook Configuration'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'name'
     

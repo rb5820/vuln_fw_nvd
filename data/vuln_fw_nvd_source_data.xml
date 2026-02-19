@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- NVD Source Data -->
-    <record id="source_nvd" model="vulnerability.framework">
+    <record id="vuln_fw_nvd_source_nvd" model="vulnerability.framework">
         <field name="name">National Vulnerability Database</field>
         <field name="code">NVD</field>
-        <field name="description">NIST National Vulnerability Database - Official source for Common Vulnerabilities and Exposures (CVE) data</field>
+        <field name="description">NIST National Vulnerability Database - Official source for CVE vulnerability data</field>
         <field name="source_type">nvd</field>
         <field name="url">https://nvd.nist.gov/</field>
         <field name="api_url">https://services.nvd.nist.gov/rest/json/cves/2.0</field>

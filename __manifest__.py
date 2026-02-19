@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'Vulnerability NVD API Connector',
+    'name': 'Vulnerability Framework - National Vulnerability Database Framework',
     'version': '18.0.1.0.0',
-    'category': 'Security',
+    'category': 'RB5820',
     'summary': 'Core NVD API connector for vulnerability data',
     'description': """
         Core National Vulnerability Database (NVD) API connector that provides:
@@ -29,19 +29,23 @@
         'security/security.xml',
         'security/ir.model.access.csv',
         'views/menus.xml',
-        'views/vuln_fw_nvd_connector_views.xml',
+        'views/vuln_fw_nvd_vendor_form_list_views.xml',
+        'views/vuln_fw_nvd_vendor_product_views.xml',
+        'views/vuln_fw_nvd_api_connector_views.xml',
         'views/vuln_fw_nvd_reference_views.xml',
         'views/vuln_fw_nvd_sync_log_views.xml',
         'views/vuln_fw_nvd_webhook_views.xml',
         'views/vuln_fw_nvd_webhook_receiver_views.xml',
+        'views/vuln_fw_nvd_webhook_allowed_host_views.xml',
+        'views/vuln_fw_nvd_webhook_blocked_host_views.xml',
         'views/vuln_fw_nvd_webhook_payload_queue_views.xml',
-        'views/dashboard_views.xml',
+        'views/vuln_fw_nvd_dashboard_views.xml',
         'data/ir_cron.xml',
-        #
         'data/vuln_fw_nvd_api_connector.xml',
+        'data/vuln_fw_nvd_webhook_receiver_default.xml',
     ],
     'demo': [
-        'demo/nvd_demo.xml',
+        # 'demo/vuln_fw_nvd_api_connector_demo.xml', # Temporarily disabled
     ],
     'installable': True,
     'application': True,

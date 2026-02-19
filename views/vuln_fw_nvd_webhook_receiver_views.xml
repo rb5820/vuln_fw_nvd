@@ -31,16 +31,64 @@
                                     </group>
                                     
                                     <group string="Access Control">
-                                        <field name="allowed_sources" placeholder="192.168.1.1, 10.0.0.0/8, ..."/>
+                                        <field name="internal_only" widget="boolean_toggle"/>
+                                        <field name="allowed_sources" placeholder="source1, source2, ..."/>
                                     </group>
                                 </group>
                                 
                                 <separator string="Webhook Endpoint"/>
                                 <p>
-                                    <strong>URL:</strong> <code>/webhook/receive/<field name="webhook_token" readonly="1"/></code><br/>
+                                    <strong>URL:</strong> <code>/api/cpe/webhook</code><br/>
                                     <strong>Method:</strong> POST<br/>
-                                    <strong>Headers:</strong> Content-Type: application/json, X-Webhook-Signature (optional)
+                                    <strong>Headers:</strong> Content-Type: application/json
                                 </p>
+                            </page>
+                            
+                            <!-- CPE 2.3 URI Format Help -->
+                            <page string="CPE URI Reference" name="cpe_reference" invisible="not internal_only">
+                                <div class="alert alert-info" role="alert">
+                                    <strong>CPE 2.3 URI Format</strong><br/>
+                                    <code>cpe:2.3:part:vendor:product:version:update:edition:language:sw_edition:target_sw:target_hw:other</code>
+                                </div>
+                                
+                                <group string="Components">
+                                    <p><strong>part:</strong> a (application), h (hardware), o (operating system)</p>
+                                    <p><strong>vendor:</strong> Vendor name (required, cannot be wildcard)</p>
+                                    <p><strong>product:</strong> Product name (required, cannot be wildcard)</p>
+                                    <p><strong>version:</strong> Version number</p>
+                                    <p><strong>update:</strong> Update/patch level</p>
+                                    <p><strong>Other fields:</strong> edition, language, sw_edition, target_sw, target_hw, other</p>
+                                    <p style="margin-top: 10px;"><em>Use * or empty string for unknown components</em></p>
+                                </group>
+                                
+                                <separator string="Retrieve All Vendors"/>
+                                <p>
+                                    <strong>To import CPEs from specific vendors, send individual requests:</strong>
+                                </p>
+                                <group string="Examples">
+                                    <p><code>cpe:2.3:a:microsoft:*:*:*:*:*:*:*:*:*:*</code> - All Microsoft applications</p>
+                                    <p><code>cpe:2.3:a:adobe:*:*:*:*:*:*:*:*:*:*</code> - All Adobe applications</p>
+                                    <p><code>cpe:2.3:o:linux:*:*:*:*:*:*:*:*:*:*</code> - All Linux distributions</p>
+                                    <p><code>cpe:2.3:a:apple:*:*:*:*:*:*:*:*:*:*</code> - All Apple applications</p>
+                                </group>
+                                
+                                <separator string="Specific Product Examples"/>
+                                <group>
+                                    <p><code>cpe:2.3:a:microsoft:office:2019:*:*:*:*:*:*:*</code></p>
+                                    <p><code>cpe:2.3:a:adobe:acrobat:2023:*:*:*:*:*:*:*</code></p>
+                                    <p><code>cpe:2.3:o:linux:linux_kernel:5.10:*:*:*:*:*:*:*</code></p>
+                                </group>
+                                
+                                <separator string="Payload Example"/>
+                                <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 4px;">{
+  "token": "your_webhook_token",
+  "cpe_uri": "cpe:2.3:a:microsoft:office:2019:*:*:*:*:*:*:*",
+  "source": "lansweeper_connector",
+  "metadata": {
+    "device_name": "WORKSTATION-001",
+    "asset_type": "software"
+  }
+}</pre>
                             </page>
                             
                             <!-- Statistics -->

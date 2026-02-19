@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Webhook Blocked Host Tree View -->
+        <record id="vuln_fw_nvd_webhook_blocked_host_tree" model="ir.ui.view">
+            <field name="name">Webhook Blocked Hosts</field>
+            <field name="model">vuln.fw.nvd.webhook.blocked.host</field>
+            <field name="arch" type="xml">
+                <list string="Blocked Hosts for Review" decoration-info="review_status == 'pending'" 
+                      decoration-warning="review_status == 'investigating'" 
+                      decoration-success="review_status == 'approved'"
+                      decoration-danger="review_status == 'rejected'">
+                    <field name="source_ip"/>
+                    <field name="blocked_count"/>
+                    <field name="endpoints_attempted"/>
+                    <field name="first_blocked"/>
+                    <field name="last_blocked"/>
+                    <field name="review_status"/>
+                    <field name="reviewed_by"/>
+                    <button name="action_approve_and_allowlist" type="object" 
+                            string="Approve &amp; Add to Allowlist" 
+                            class="btn-success"
+                            invisible="review_status != 'pending'"
+                            confirm="Are you sure you want to approve this host and add it to the allowlist?"/>
+                    <button name="action_reject_permanently" type="object" 
+                            string="Reject" 
+                            class="btn-danger"
+                            invisible="review_status != 'pending'"
+                            confirm="Are you sure you want to permanently reject this host?"/>
+                    <button name="action_mark_investigating" type="object" 
+                            string="Investigate" 
+                            class="btn-warning"
+                            invisible="review_status != 'pending'"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Webhook Blocked Host Form View -->
+        <record id="vuln_fw_nvd_webhook_blocked_host_form" model="ir.ui.view">
+            <field name="name">Webhook Blocked Host Form</field>
+            <field name="model">vuln.fw.nvd.webhook.blocked.host</field>
+            <field name="arch" type="xml">
+                <form string="Blocked Host Review">
+                    <header>
+                        <button name="action_approve_and_allowlist" type="object" 
+                                string="✅ Approve &amp; Add to Allowlist" 
+                                class="btn-success"
+                                invisible="review_status != 'pending'"
+                                confirm="This will add the host to the allowlist. Are you sure?"/>
+                        <button name="action_reject_permanently" type="object" 
+                                string="❌ Reject Permanently" 
+                                class="btn-danger"
+                                invisible="review_status != 'pending'"
+                                confirm="This will permanently reject this host. Are you sure?"/>
+                        <button name="action_mark_investigating" type="object" 
+                                string="🔍 Mark as Investigating" 
+                                class="btn-warning"
+                                invisible="review_status != 'pending'"/>
+                        <field name="review_status" widget="statusbar"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button class="oe_stat_button" type="object" name="action_view_blocked_attempts" 
+                                    icon="fa-ban">
+                                <field string="Block Attempts" name="blocked_count" widget="statinfo"/>
+                            </button>
+                        </div>
+                        
+                        <div class="oe_title">
+                            <h1>
+                                <field name="source_ip" class="o_text_overflow"/>
+                            </h1>
+                            <h3>
+                                <span class="badge badge-danger" invisible="review_status != 'pending'">Pending Review</span>
+                                <span class="badge badge-warning" invisible="review_status != 'investigating'">Under Investigation</span>
+                                <span class="badge badge-success" invisible="review_status != 'approved'">Approved</span>
+                                <span class="badge badge-secondary" invisible="review_status != 'rejected'">Rejected</span>
+                            </h3>
+                        </div>
+                        
+                        <notebook>
+                            <page string="Block Details" name="block_details">
+                                <group>
+                                    <group name="block_stats">
+                                        <field name="blocked_count"/>
+                                        <field name="first_blocked"/>
+                                        <field name="last_blocked"/>
+                                    </group>
+                                    <group name="review_info">
+                                        <field name="reviewed_by"/>
+                                        <field name="reviewed_date"/>
+                                    </group>
+                                </group>
+                                
+                                <separator string="Request Context"/>
+                                <group>
+                                    <group name="endpoint_info">
+                                        <field name="endpoints_attempted" widget="text" placeholder="No endpoints recorded"/>
+                                        <label for="endpoints_attempted" string="Attempted Endpoints" style="font-weight: bold;"/>
+                                    </group>
+                                    <group name="user_agent_info">
+                                        <field name="user_agent" widget="text" placeholder="No user agent recorded"/>
+                                        <label for="user_agent" string="User Agents" style="font-weight: bold;"/>
+                                    </group>
+                                </group>
+                            </page>
+                            
+                            <page string="Payload Samples" name="payload_samples">
+                                <div class="alert alert-warning" role="alert">
+                                    <strong>⚠️ Security Note:</strong> These are sample payloads from blocked requests. 
+                                    Review carefully before approving.
+                                </div>
+                                <field name="payload_samples" widget="text" placeholder="No payload samples captured"/>
+                            </page>
+                            
+                            <page string="Review Notes" name="review_notes">
+                                <field name="review_notes" widget="text" 
+                                       placeholder="Add administrative notes about this blocked host..."/>
+                                
+                                <div class="mt16" invisible="review_status == 'pending'">
+                                    <h4>Approval Guidelines</h4>
+                                    <ul>
+                                        <li><strong>Legitimate Sources:</strong> Known application servers, monitoring systems</li>
+                                        <li><strong>Expected Payloads:</strong> Well-formed JSON with expected fields</li>
+                                        <li><strong>Regular Patterns:</strong> Consistent user agents and request patterns</li>
+                                        <li><strong>Reject:</strong> Suspicious IPs, malformed payloads, scanning attempts</li>
+                                    </ul>
+                                </div>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Webhook Blocked Host Search View -->
+        <record id="vuln_fw_nvd_webhook_blocked_host_search" model="ir.ui.view">
+            <field name="name">Webhook Blocked Host Search</field>
+            <field name="model">vuln.fw.nvd.webhook.blocked.host</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="source_ip"/>
+                    <field name="user_agent"/>
+                    <field name="reviewed_by"/>
+                    
+                    <filter name="pending_review" string="Pending Review" domain="[('review_status', '=', 'pending')]"/>
+                    <filter name="investigating" string="Investigating" domain="[('review_status', '=', 'investigating')]"/>
+                    <filter name="approved" string="Approved" domain="[('review_status', '=', 'approved')]"/>
+                    <filter name="rejected" string="Rejected" domain="[('review_status', '=', 'rejected')]"/>
+                    
+                    <separator/>
+                    <filter name="recent_blocks" string="Blocked Today" 
+                            domain="[('last_blocked', '>=', datetime.date.today().strftime('%Y-%m-%d'))]"/>
+                    <filter name="multiple_attempts" string="Multiple Attempts" domain="[('blocked_count', '>', 1)]"/>
+                    <filter name="high_volume" string="High Volume (10+)" domain="[('blocked_count', '>=', 10)]"/>
+                    
+                    <group expand="0" string="Group By">
+                        <filter name="group_review_status" string="Review Status" context="{'group_by': 'review_status'}"/>
+                        <filter name="group_blocked_date" string="First Blocked Date" context="{'group_by': 'first_blocked:day'}"/>
+                        <filter name="group_reviewed_by" string="Reviewed By" context="{'group_by': 'reviewed_by'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+
+
+    </data>
+</odoo>

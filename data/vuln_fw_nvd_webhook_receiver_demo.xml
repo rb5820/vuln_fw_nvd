@@ -16,7 +16,7 @@
         
         <record id="vuln_fw_nvd_webhook_receiver_demo_nvd" model="vuln.fw.nvd.webhook.receiver">
             <field name="name">🔵 Demo: National Vulnerability Database  External Feed</field>
-            <field name="description">Demo inbound webhook receiver for NVD vulnerability data. Receives CVE/CPE updates from external sources or partner systems.</field>
+            <field name="description">Demo inbound webhook receiver for Vulnerability Framework NVD:  data. Receives CVE/CPE updates from external sources or partner systems.</field>
             <field name="active">True</field>
             <field name="webhook_token">demo-nvd-webhook-token-secure-12345678</field>
             <field name="allowed_sources">192.168.1.0/24,10.0.0.0/8</field>
@@ -31,7 +31,7 @@
             from external sources, auto-creating vendors and products.
         -->
         
-        <record id="vuln_fw_nvd_cpe_receiver_demo_cpe23" model="vuln.fw.nvd.cpe.webhook.receiver">
+        <record id="vuln_fw_nvd_cpe_receiver_demo_cpe23" model="vuln.fw.nvd.webhook.receiver">
             <field name="name">🟢 Demo: CPE 2.3 Parser</field>
             <field name="description">Demo webhook receiver for CPE 2.3 formatted entries. Automatically parses and creates CPE dictionary records.</field>
             <field name="active">True</field>

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Webhook Allowed Host Tree View -->
+        <record id="vuln_fw_nvd_webhook_allowed_host_tree" model="ir.ui.view">
+            <field name="name">Webhook Allowed Hosts</field>
+            <field name="model">vuln.fw.nvd.webhook.allowed.host</field>
+            <field name="arch" type="xml">
+                <list string="Webhook Allowed Hosts" decoration-muted="not active">
+                    <field name="sequence" widget="handle"/>
+                    <field name="active" invisible="1"/>
+                    <field name="name"/>
+                    <field name="host_type"/>
+                    <field name="host_pattern"/>
+                    <field name="receiver_ids" widget="many2many_tags"/>
+                    <field name="require_token"/>
+                    <field name="require_signature"/>
+                    <field name="total_requests"/>
+                    <field name="allowed_requests" decoration-success="allowed_requests > 0"/>
+                    <field name="blocked_requests" decoration-danger="blocked_requests > 0"/>
+                    <field name="last_status"/>                    <field name="last_endpoint"/>                    <field name="last_endpoint"/>
+                    <field name="last_request"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Webhook Allowed Host Form View -->
+        <record id="vuln_fw_nvd_webhook_allowed_host_form" model="ir.ui.view">
+            <field name="name">Webhook Allowed Host Form</field>
+            <field name="model">vuln.fw.nvd.webhook.allowed.host</field>
+            <field name="arch" type="xml">
+                <form string="Webhook Allowed Host">
+                    <header>
+                        <field name="last_status" widget="statusbar"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button class="oe_stat_button" type="object" name="action_view_request_logs" icon="fa-list">
+                                <field string="Requests" name="total_requests" widget="statinfo"/>
+                            </button>
+                        </div>
+                        
+                        <widget name="web_ribbon" title="Inactive" bg_color="bg-danger" invisible="active"/>
+                        
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" class="o_text_overflow" placeholder="e.g., Production Server, Dev Localhost"/>
+                            </h1>
+                        </div>
+                        
+                        <notebook>
+                            <page string="Host Configuration" name="host_config">
+                                <group>
+                                    <group name="host_info">
+                                        <field name="active"/>
+                                        <field name="sequence"/>
+                                        <field name="host_type"/>
+                                        <field name="host_pattern"/>
+                                        <field name="host_description"/>
+                                    </group>
+                                    <group name="security_settings">
+                                        <field name="require_token"/>
+                                        <field name="require_signature"/>
+                                        <field name="require_https"/>
+                                    </group>
+                                </group>
+                                
+                                <separator string="Webhook Receivers"/>
+                                <field name="receiver_ids" widget="many2many" options="{'no_create': True}"/>
+                                
+                                <!-- Host Type Help -->
+                                <div class="alert alert-info" role="alert" invisible="host_type not in ['ip_single', 'ip_range', 'wildcard']">
+                                    <strong>Host Pattern Examples:</strong><br/>
+                                    <ul invisible="host_type != 'ip_single'">
+                                        <li><code>192.168.1.100</code> - Single IP address</li>
+                                        <li><code>2001:db8::1</code> - IPv6 address</li>
+                                    </ul>
+                                    <ul invisible="host_type != 'ip_range'">
+                                        <li><code>192.168.1.0/24</code> - Subnet (192.168.1.1-254)</li>
+                                        <li><code>10.0.0.0/8</code> - Large private network</li>
+                                        <li><code>127.0.0.0/8</code> - Localhost range</li>
+                                    </ul>
+                                    <ul invisible="host_type != 'wildcard'">
+                                        <li><code>192.168.1.*</code> - Wildcard subnet</li>
+                                        <li><code>10.*.*.?</code> - Complex wildcard</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="alert alert-warning" role="alert" invisible="host_type != 'any'">
+                                    <strong>⚠️ Security Warning:</strong> "Any Host" disables zero trust protection and allows all sources!
+                                </div>
+                            </page>
+                            
+                            <page string="Statistics" name="statistics">
+                                <group>
+                                    <group string="Request Statistics">
+                                        <field name="total_requests"/>
+                                        <field name="allowed_requests"/>
+                                        <field name="blocked_requests"/>
+                                        <field name="last_request"/>
+                                    </group>
+                                    <group string="Success Rate">
+                                        <field name="last_status"/>
+                                        <field name="last_endpoint"/>
+                                    </group>
+                                </group>
+                                
+                                <separator string="Endpoint Access History"/>
+                                <field name="endpoints_accessed" readonly="1" widget="text"/>
+                                <p class="text-muted">Shows all webhook endpoints this host has attempted to access.</p>
+                                
+                                <group>
+                                </group>
+                                
+                                <!-- Statistics Chart Placeholder -->
+                                <separator string="Request History"/>
+                                <p>Request history and analytics would be displayed here.</p>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <chatter />
+                </form>
+            </field>
+        </record>
+
+        <!-- Webhook Allowed Host Search View -->
+        <record id="vuln_fw_nvd_webhook_allowed_host_search" model="ir.ui.view">
+            <field name="name">Webhook Allowed Host Search</field>
+            <field name="model">vuln.fw.nvd.webhook.allowed.host</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name" string="Host" filter_domain="['|', ('name', 'ilike', self), ('host_pattern', 'ilike', self)]"/>
+                    <field name="host_pattern"/>
+                    <field name="receiver_ids"/>
+                    
+                    <filter name="active" string="Active" domain="[('active', '=', True)]"/>
+                    <filter name="inactive" string="Inactive" domain="[('active', '=', False)]"/>
+                    
+                    <separator/>
+                    <filter name="ip_single" string="Single IP" domain="[('host_type', '=', 'ip_single')]"/>
+                    <filter name="ip_range" string="IP Range" domain="[('host_type', '=', 'ip_range')]"/>
+                    <filter name="hostname" string="Hostname" domain="[('host_type', '=', 'hostname')]"/>
+                    <filter name="wildcard" string="Wildcard" domain="[('host_type', '=', 'wildcard')]"/>
+                    <filter name="any_host" string="Any Host" domain="[('host_type', '=', 'any')]"/>
+                    
+                    <separator/>
+                    <filter name="require_token" string="Require Token" domain="[('require_token', '=', True)]"/>
+                    <filter name="require_signature" string="Require Signature" domain="[('require_signature', '=', True)]"/>
+                    <filter name="require_https" string="Require HTTPS" domain="[('require_https', '=', True)]"/>
+                    
+                    <separator/>
+                    <filter name="recent_requests" string="Recent Requests" domain="[('last_request', '>=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                    <filter name="blocked_requests" string="Has Blocked Requests" domain="[('blocked_requests', '>', 0)]"/>
+                    
+                    <group expand="0" string="Group By">
+                        <filter name="group_host_type" string="Host Type" context="{'group_by': 'host_type'}"/>
+                        <filter name="group_receiver" string="Receiver" context="{'group_by': 'receiver_ids'}"/>
+                        <filter name="group_status" string="Last Status" context="{'group_by': 'last_status'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- Action for Webhook Allowed Hosts -->
+
+
+    </data>
+</odoo>

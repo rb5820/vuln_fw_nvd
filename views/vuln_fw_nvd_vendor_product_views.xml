@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Menu Items -->
+        <menuitem
+            id="menu_vuln_fw_nvd_vendor"
+            name="📦 Vendors"
+            parent="menu_nvd_config"
+            action="action_vuln_fw_nvd_vendor"
+            sequence="50"
+            />
+
+        <menuitem
+            id="menu_vuln_fw_nvd_product"
+            name="📦 Products"
+            parent="menu_nvd_config"
+            action="action_vuln_fw_nvd_product"
+            sequence="60"
+            />
+
+    </data>
+</odoo>
