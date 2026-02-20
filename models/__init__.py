@@ -14,3 +14,5 @@ from . import vuln_fw_nvd_webhook_receiver_log
 from . import vuln_fw_nvd_webhook_payload_queue
 from . import vuln_fw_nvd_webhook_allowed_host
 from . import vuln_fw_nvd_webhook_blocked_host
+from . import vuln_fw_nvd_threat_intel
+from . import vuln_fw_nvd_threat_intel_service

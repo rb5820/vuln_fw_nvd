@@ -2,7 +2,7 @@
 <odoo>
 
     <!-- Sync Log List View -->
-    <record id="view_vuln_fw_nvd_sync_log_tree" model="ir.ui.view">
+    <record id="view_vuln_fw_nvd_sync_log_list" model="ir.ui.view">
         <field name="name">vuln.fw.nvd.sync.log.list</field>
         <field name="model">vuln.fw.nvd.sync.log</field>
         <field name="arch" type="xml">

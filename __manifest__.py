@@ -41,6 +41,7 @@
         'views/vuln_fw_nvd_webhook_allowed_host_views.xml',
         'views/vuln_fw_nvd_webhook_blocked_host_views.xml',
         'views/vuln_fw_nvd_webhook_payload_queue_views.xml',
+        'views/vuln_fw_nvd_threat_intel_views.xml',
         'views/vuln_fw_nvd_dashboard_views.xml',
         'data/ir_cron.xml',
         'data/vuln_fw_nvd_api_connector.xml',

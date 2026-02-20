@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Threat Intelligence Tree View -->
+    <record id="view_vuln_fw_nvd_threat_intel_list" model="ir.ui.view">
+        <field name="name">vuln.fw.nvd.threat.intel.list</field>
+        <field name="model">vuln.fw.nvd.threat.intel</field>
+        <field name="arch" type="xml">
+            <list string="Threat Intelligence" default_order="collection_timestamp desc">
+                <field name="cve_id"/>
+                <field name="title"/>
+                <field name="source"/>
+                <field name="intel_type"/>
+                <field name="confidence_level"/>
+                <field name="collection_timestamp"/>
+                <field name="is_active"/>
+                <field name="verification_status"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Threat Intelligence Form View -->
+    <record id="view_vuln_fw_nvd_threat_intel_form" model="ir.ui.view">
+        <field name="name">vuln.fw.nvd.threat.intel.form</field>
+        <field name="model">vuln.fw.nvd.threat.intel</field>
+        <field name="arch" type="xml">
+            <form string="Threat Intelligence">
+                <header>
+                    <button name="action_verify_intelligence" type="object"
+                            string="Verify Intelligence" class="btn-primary"
+                            invisible="verification_status == 'verified'"/>
+                    <button name="action_mark_false_positive" type="object"
+                            string="Mark as False Positive" class="btn-danger"
+                            invisible="verification_status == 'false_positive'"/>
+                    <field name="verification_status" widget="statusbar"
+                           statusbar_visible="unverified,verified,false_positive"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="title" placeholder="Threat Intelligence Title"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="cve_id" required="1"/>
+                            <field name="source" required="1"/>
+                            <field name="intel_type" required="1"/>
+                            <field name="confidence_level" required="1"/>
+                        </group>
+                        <group>
+                            <field name="collection_timestamp" required="1"/>
+                            <field name="source_url" widget="url"/>
+                            <field name="author"/>
+                            <field name="is_active"/>
+                        </group>
+                    </group>
+                    <group string="Intelligence Details">
+                        <field name="content" colspan="4" widget="html"/>
+                    </group>
+                    <group string="Additional Information">
+                        <group>
+                            <field name="tags"/>
+                            <field name="malware_names"/>
+                            <field name="actor_names"/>
+                        </group>
+                        <group>
+                            <field name="affected_products" colspan="2"/>
+                            <field name="mitigation_steps" colspan="2"/>
+                        </group>
+                    </group>
+                    <group string="Verification">
+                        <group>
+                            <field name="verified_by" readonly="1"/>
+                            <field name="verified_date" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="days_since_collection" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="References">
+                        <field name="references" colspan="4"/>
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Threat Intelligence Search View -->
+    <record id="view_vuln_fw_nvd_threat_intel_search" model="ir.ui.view">
+        <field name="name">vuln.fw.nvd.threat.intel.search</field>
+        <field name="model">vuln.fw.nvd.threat.intel</field>
+        <field name="arch" type="xml">
+            <search string="Threat Intelligence">
+                <field name="cve_id"/>
+                <field name="title"/>
+                <field name="source"/>
+                <field name="intel_type"/>
+                <field name="confidence_level"/>
+                <field name="verification_status"/>
+                <field name="author"/>
+                <field name="tags"/>
+                <filter string="Active" name="active" domain="[('is_active', '=', True)]"/>
+                <filter string="Unverified" name="unverified" domain="[('verification_status', '=', 'unverified')]"/>
+                <filter string="Verified" name="verified" domain="[('verification_status', '=', 'verified')]"/>
+                <filter string="High Confidence" name="high_confidence" domain="[('confidence_level', 'in', ['high', 'confirmed'])]"/>
+                <filter string="Recent (7 days)" name="recent" domain="[('collection_timestamp', '>=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Source" name="groupby_source" context="{'group_by': 'source'}"/>
+                    <filter string="Type" name="groupby_type" context="{'group_by': 'intel_type'}"/>
+                    <filter string="Confidence" name="groupby_confidence" context="{'group_by': 'confidence_level'}"/>
+                    <filter string="Verification Status" name="groupby_verification" context="{'group_by': 'verification_status'}"/>
+                    <filter string="CVE" name="groupby_cve" context="{'group_by': 'cve_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Threat Intelligence Action -->
+    <record id="action_vuln_fw_nvd_threat_intel" model="ir.actions.act_window">
+        <field name="name">🔴 Threat Intelligence</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">vuln.fw.nvd.threat.intel</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_vuln_fw_nvd_threat_intel_search"/>
+        <field name="help">Manage threat intelligence data for vulnerabilities</field>
+    </record>
+
+    <!-- Threat Intelligence Menu -->
+    <menuitem id="menu_vuln_fw_nvd_threat_intel" name="🛡️ Threat Intelligence"
+              parent="vuln_fw_nvd.menu_nvd_root" sequence="50" action="action_vuln_fw_nvd_threat_intel"/>
+</odoo>

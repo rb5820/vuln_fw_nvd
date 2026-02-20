@@ -114,6 +114,12 @@ class VulnFwNvdCpeDictionary(models.Model):
         help='Whether this CPE is marked as vulnerable in its most recent CVE configuration context'
     )
     
+    subscriber_count = fields.Integer(
+        string='Subscriber Count',
+        default=0,
+        help='Number of users or systems subscribing to this CPE for vulnerability notifications'
+    )
+    
     other = fields.Char(
         string='Other',
         help='Other qualifying information'
@@ -178,12 +184,6 @@ class VulnFwNvdCpeDictionary(models.Model):
     _sql_constraints = [
         ('cpe_name_unique', 'UNIQUE(cpe_name)', 'CPE name must be unique!'),
     ]
-    
-    # === FIELD PARAMETER VALIDATION ===
-    @api.model
-    def _valid_field_parameter(self, field, name):
-        """Allow track_visibility parameter for mail thread functionality"""
-        return name == 'track_visibility' or super()._valid_field_parameter(field, name)
     
     def _format_display_version(self):
         """Format version string for display - can be overridden in child modules

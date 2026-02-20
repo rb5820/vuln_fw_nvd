@@ -2,7 +2,7 @@
 <odoo>
     <data>
         <!-- Webhook Blocked Host Tree View -->
-        <record id="vuln_fw_nvd_webhook_blocked_host_tree" model="ir.ui.view">
+        <record id="vuln_fw_nvd_webhook_blocked_host_list" model="ir.ui.view">
             <field name="name">Webhook Blocked Hosts</field>
             <field name="model">vuln.fw.nvd.webhook.blocked.host</field>
             <field name="arch" type="xml">

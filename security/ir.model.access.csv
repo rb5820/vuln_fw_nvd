@@ -41,3 +41,6 @@ access_vuln_fw_nvd_webhook_allowed_host_admin,vuln.fw.nvd.webhook.allowed.host.a
 access_vuln_fw_nvd_webhook_blocked_host_user,vuln.fw.nvd.webhook.blocked.host.user,model_vuln_fw_nvd_webhook_blocked_host,base.group_user,1,0,0,0
 access_vuln_fw_nvd_webhook_blocked_host_manager,vuln.fw.nvd.webhook.blocked.host.manager,model_vuln_fw_nvd_webhook_blocked_host,group_nvd_manager,1,1,1,1
 access_vuln_fw_nvd_webhook_blocked_host_admin,vuln.fw.nvd.webhook.blocked.host.admin,model_vuln_fw_nvd_webhook_blocked_host,base.group_system,1,1,1,1
+access_vuln_fw_nvd_threat_intel_user,vuln.fw.nvd.threat.intel.user,model_vuln_fw_nvd_threat_intel,group_nvd_user,1,0,0,0
+access_vuln_fw_nvd_threat_intel_manager,vuln.fw.nvd.threat.intel.manager,model_vuln_fw_nvd_threat_intel,group_nvd_manager,1,1,1,1
+access_vuln_fw_nvd_threat_intel_admin,vuln.fw.nvd.threat.intel.admin,model_vuln_fw_nvd_threat_intel,base.group_system,1,1,1,1
