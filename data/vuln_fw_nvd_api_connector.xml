@@ -5,9 +5,32 @@
         <record id="vuln_fw_nvd_cve_api_connector_default" model="vuln.fw.nvd.api.connector">
             <field name="name">Default National Vulnerability Database API Connector</field>
             <field name="api_url">https://services.nvd.nist.gov/rest/json</field>
-            <field name="connector_active">False</field>
+            <field name="connector_active">True</field>
             <field name="debug_mode">True</field>
             <field name="active">True</field>
+        </record>
+        
+        <!-- Default Webhook Receiver for NVD CVE Updates -->
+        <record id="vuln_fw_nvd_webhook_receiver_cve" model="vuln.fw.nvd.webhook.receiver">
+            <field name="name">NVD CVE Webhook Receiver</field>
+            <field name="description">Receive CVE updates from NVD webhook service</field>
+            <field name="endpoint_url">/api/cpe/webhook</field>
+            <field name="webhook_token">nvd_webhook_token_2026</field>
+            <field name="active">True</field>
+            <field name="enforce_host_allowlist">True</field>
+            <field name="internal_only">False</field>
+            <field name="validate_signature">False</field>
+        </record>
+        
+        <!-- Default Allowed Host for NVD Webhooks -->
+        <record id="vuln_fw_nvd_allowed_host_nvd_services" model="vuln.fw.nvd.webhook.allowed.host">
+            <field name="name">NVD Services (services.nvd.nist.gov)</field>
+            <field name="host_description">Allow webhooks from NVD services for vulnerability updates</field>
+            <field name="active">True</field>
+            <field name="host_type">hostname</field>
+            <field name="host_pattern">services.nvd.nist.gov</field>
+            <field name="sequence">10</field>
+            <field name="receiver_ids" eval="[(4, ref('vuln_fw_nvd_webhook_receiver_cve'))]"/>
         </record>
     </data>
 </odoo>

@@ -9,14 +9,16 @@
             <field name="arch" type="xml">
                 <form string="Webhook Payload">
                     <header>
-                        <button name="action_process_now" string="🔄 Process Now" type="object" 
-                                class="btn-primary" invisible="state not in ('pending', 'failed')"/>
+                        <button name="action_process_now" string="▶ Process Now" type="object" 
+                                class="btn-primary"/>
+                        <button name="action_process_async" string="⚙ Process Async" type="object" 
+                                class="btn-info"/>
                         <button name="action_retry" string="🔁 Retry Failed" type="object" 
-                                class="btn-warning" invisible="state != 'failed'"/>
+                                class="btn-warning"/>
                         <button name="action_send_to_review" string="👁 Send to Review" type="object" 
-                                class="btn-info" invisible="state not in ('pending', 'failed')"/>
+                                class="btn-info"/>
                         <button name="action_review_done" string="✓ Review Done" type="object" 
-                                class="btn-success" invisible="state != 'manual_review'"/>
+                                class="btn-success"/>
                         <field name="state" widget="statusbar" statusbar_visible="pending,processing,manual_review,success,error"/>
                     </header>
                     <sheet>

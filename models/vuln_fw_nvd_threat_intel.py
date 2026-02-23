@@ -151,7 +151,6 @@ class VulnFwNvdThreatIntel(models.Model):
             else:
                 record.days_since_collection = 0
 
-    @api.model
     def create(self, vals):
         """Override create to add verification logic"""
         record = super().create(vals)

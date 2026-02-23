@@ -32,6 +32,7 @@
         'views/vuln_fw_nvd_vendor_form_list_views.xml',
         'views/vuln_fw_nvd_vendor_product_views.xml',
         'views/vuln_fw_nvd_api_connector_views.xml',
+        'views/vuln_fw_nvd_api_client_views.xml',
         'views/vuln_fw_nvd_reference_views.xml',
         'views/vuln_fw_nvd_sync_log_views.xml',
         'views/vuln_fw_nvd_cpe_dictionary_views.xml',

@@ -64,11 +64,27 @@ class VulnFwNvdCpeDictionary(models.Model):
         help='Vendor or manufacturer name'
     )
     
+    vendor_id = fields.Many2one(
+        'vuln.fw.nvd.vendor',
+        string='Vendor Record',
+        ondelete='set null',
+        index=True,
+        help='Link to vendor master record'
+    )
+    
     product = fields.Char(
         string='Product',
         required=True,
         index=True,
         help='Product name'
+    )
+    
+    product_id = fields.Many2one(
+        'vuln.fw.nvd.product',
+        string='Product Record',
+        ondelete='set null',
+        index=True,
+        help='Link to product master record'
     )
     
     version = fields.Char(
@@ -118,6 +134,13 @@ class VulnFwNvdCpeDictionary(models.Model):
         string='Subscriber Count',
         default=0,
         help='Number of users or systems subscribing to this CPE for vulnerability notifications'
+    )
+    
+    subscription_ids = fields.One2many(
+        'vuln.fw.nvd.asset.cpe.subscription',
+        'cpe_dictionary_id',
+        string='Subscriptions',
+        help='Asset subscriptions to this CPE'
     )
     
     other = fields.Char(
@@ -178,6 +201,38 @@ class VulnFwNvdCpeDictionary(models.Model):
                 record.version or '',
             ]
             record.search_text = ' '.join([p.lower() for p in parts if p])
+    
+    @api.onchange('vendor')
+    def _onchange_vendor(self):
+        """Auto-link vendor_id when vendor text changes"""
+        if self.vendor:
+            vendor_rec = self.env['vuln.fw.nvd.vendor'].search([
+                ('name', '=ilike', self.vendor)
+            ], limit=1)
+            if vendor_rec:
+                self.vendor_id = vendor_rec
+    
+    @api.onchange('vendor_id')
+    def _onchange_vendor_id(self):
+        """Update vendor text when vendor_id changes"""
+        if self.vendor_id:
+            self.vendor = self.vendor_id.name
+    
+    @api.onchange('product')
+    def _onchange_product(self):
+        """Auto-link product_id when product text changes"""
+        if self.product:
+            product_rec = self.env['vuln.fw.nvd.product'].search([
+                ('name', '=ilike', self.product)
+            ], limit=1)
+            if product_rec:
+                self.product_id = product_rec
+    
+    @api.onchange('product_id')
+    def _onchange_product_id(self):
+        """Update product text when product_id changes"""
+        if self.product_id:
+            self.product = self.product_id.name
     
 
     
@@ -292,13 +347,42 @@ class VulnFwNvdCpeDictionary(models.Model):
                 _logger.info(f"Updated CPE: {cpe_uri}")
                 return existing_cpe
             else:
+                # Auto-link or create vendor record
+                vendor_rec = self.env['vuln.fw.nvd.vendor'].search([
+                    ('name', '=ilike', vendor)
+                ], limit=1)
+                
+                if not vendor_rec:
+                    vendor_rec = self.env['vuln.fw.nvd.vendor'].create({
+                        'name': vendor,
+                        'active': True
+                    })
+                    _logger.info(f"Created new vendor: {vendor}")
+                
+                # Auto-link or create product record
+                product_rec = self.env['vuln.fw.nvd.product'].search([
+                    ('name', '=ilike', product),
+                    ('vendor_id', '=', vendor_rec.id)
+                ], limit=1)
+                
+                if not product_rec:
+                    product_rec = self.env['vuln.fw.nvd.product'].create({
+                        'name': product,
+                        'vendor_id': vendor_rec.id,
+                        'active': True
+                    })
+                    _logger.info(f"Created new product: {product} for vendor: {vendor}")
+                
                 # Create new CPE record
                 cpe_data = {
+                    'cpe_uri': cpe_uri,
                     'cpe_name': cpe_uri,
                     'title': title,
                     'part': part,
                     'vendor': vendor,
+                    'vendor_id': vendor_rec.id if vendor_rec else False,
                     'product': product,
+                    'product_id': product_rec.id if product_rec else False,
                     'version': version,
                     'update': update,
                     'edition': edition,

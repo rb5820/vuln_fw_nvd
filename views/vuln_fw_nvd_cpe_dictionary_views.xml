@@ -23,7 +23,9 @@
                         <group>
                             <group name="basic_info" string="Basic Information">
                                 <field name="vendor"/>
+                                <field name="vendor_id" options="{'no_create': True}"/>
                                 <field name="product"/>
+                                <field name="product_id" options="{'no_create': True}"/>
                                 <field name="version"/>
                                 <field name="part"/>
                             </group>
@@ -48,6 +50,21 @@
                                     </group>
                                 </group>
                             </page>
+                            <page string="Subscribers" name="subscribers">
+                                <field name="subscription_ids">
+                                    <list>
+                                        <field name="asset_id"/>
+                                        <field name="asset_name"/>
+                                        <field name="software_name"/>
+                                        <field name="software_version"/>
+                                        <field name="state"/>
+                                        <field name="subscribed_date"/>
+                                        <field name="activated_date"/>
+                                        <field name="vulnerability_count"/>
+                                        <field name="critical_vulnerability_count"/>
+                                    </list>
+                                </field>
+                            </page>
                         </notebook>
                     </sheet>
                     <chatter />
@@ -63,7 +80,9 @@
                 <list string="CPE Dictionary">
                     <field name="cpe_uri"/>
                     <field name="vendor"/>
+                    <field name="vendor_id"/>
                     <field name="product"/>
+                    <field name="product_id"/>
                     <field name="version"/>
                     <field name="part"/>
                     <field name="subscriber_count"/>

@@ -153,6 +153,31 @@ class VulnFwNvdWebhookPayloadQueue(models.Model):
             else:
                 record.processing_duration = 0
     
+    def create(self, vals_list):
+        """Override create to ensure no payloads start in success state"""
+        if isinstance(vals_list, dict):
+            vals_list = [vals_list]
+        
+        for vals in vals_list:
+            if vals.get('state') == 'success':
+                raise UserError(_('Payloads cannot be manually set to success state. They must be processed first.'))
+        
+        return super().create(vals_list)
+    
+    def write(self, vals):
+        """Override write to prevent manual state change to success"""
+        if 'state' in vals and vals['state'] == 'success':
+            # Check if payload has actually been processed
+            for record in self:
+                if not record.process_result or record.state != 'processing':
+                    raise UserError(_(
+                        'Payload %d cannot be marked as success until it has been processed. '
+                        'Use "Process Now" or "Process Async" button to process the payload.'
+                    ) % record.id)
+        
+        return super().write(vals)
+    
+
     def action_process_now(self):
         """Manual trigger to process this payload immediately"""
         self.ensure_one()
@@ -160,20 +185,29 @@ class VulnFwNvdWebhookPayloadQueue(models.Model):
             return self._process_payload()
         except Exception as e:
             self.write({
-                'state': 'failed',
+                'state': 'error',
                 'error_message': str(e)
             })
             raise
+    
+    def action_process_async(self):
+        """Trigger asynchronous processing (placeholder for job queue integration)"""
+        self.ensure_one()
+        _logger.info(f"Queued {len(self)} payload(s) for async processing")
+        # TODO: Integrate with job queue system (e.g., queue_jobs, celery, etc.)
+        # For now, this is a placeholder that can be connected to:
+        # - Odoo's queue_job system (if installed)
+        # - Celery or other async workers
+        # - Scheduled cron jobs
+        return True
     
     def _process_payload(self):
         """
         Process the queued payload.
         Called by cron job or manually.
+        Can process from any state.
         """
         self.ensure_one()
-        
-        if self.state not in ['pending', 'error']:
-            raise UserError(f"Cannot process payload in {self.state} state")
         
         if self.retry_count >= self.max_retries:
             self.write({'state': 'error', 'error_message': 'Max retries exceeded'})

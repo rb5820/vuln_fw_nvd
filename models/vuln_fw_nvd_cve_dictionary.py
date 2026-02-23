@@ -153,3 +153,217 @@ class VulnFwNvdCveDictionary(models.Model):
     _sql_constraints = [
         ('cve_id_unique', 'UNIQUE(cve_id)', 'CVE ID must be unique!'),
     ]
+
+    @api.model
+    def create_from_api_data(self, api_cve_data):
+        """Create or update CVE from NVD API data format (vulnerabilities[].cve)"""
+        if not api_cve_data:
+            raise ValueError("Missing CVE API data")
+        
+        cve_id = api_cve_data.get('id')
+        if not cve_id:
+            raise ValueError("Missing CVE ID in API data")
+        
+        # Check if CVE already exists
+        existing_cve = self.search([('cve_id', '=', cve_id)], limit=1)
+        if existing_cve:
+            # Update existing CVE
+            existing_cve._update_from_api_data(api_cve_data)
+            return existing_cve
+        
+        # Extract data from API format
+        descriptions = api_cve_data.get('descriptions', [])
+        description = ""
+        for desc in descriptions:
+            if desc.get('lang') == 'en':
+                description = desc.get('value', '')
+                break
+        
+        # Extract published date
+        published_date_str = api_cve_data.get('published')
+        published_date = None
+        if published_date_str:
+            try:
+                # Parse ISO format timestamp (e.g., '2021-08-26T15:15:06.993')
+                from datetime import datetime
+                published_date = datetime.fromisoformat(published_date_str.replace('Z', '+00:00'))
+            except Exception as e:
+                _logger.warning(f"Failed to parse published date '{published_date_str}': {e}")
+
+        last_modified_date_str = api_cve_data.get('lastModified')
+        last_modified_date = None
+        if last_modified_date_str:
+            try:
+                # Parse ISO format timestamp (e.g., '2021-08-26T15:15:06.993')
+                from datetime import datetime
+                last_modified_date = datetime.fromisoformat(last_modified_date_str.replace('Z', '+00:00'))
+            except Exception as e:
+                _logger.warning(f"Failed to parse last modified date '{last_modified_date_str}': {e}")
+        
+        # Extract CVSS scores from metrics
+        cvss_v3_score = 0.0
+        cvss_v2_score = 0.0
+        
+        metrics = api_cve_data.get('metrics', {})
+        
+        # CVSS v3.1
+        cvss_v31 = metrics.get('cvssMetricV31', [])
+        if cvss_v31:
+            cvss_data = cvss_v31[0].get('cvssData', {})
+            cvss_v3_score = cvss_data.get('baseScore', 0.0)
+        
+        # CVSS v3.0
+        if cvss_v3_score == 0.0:
+            cvss_v30 = metrics.get('cvssMetricV30', [])
+            if cvss_v30:
+                cvss_data = cvss_v30[0].get('cvssData', {})
+                cvss_v3_score = cvss_data.get('baseScore', 0.0)
+        
+        # CVSS v2
+        cvss_v2 = metrics.get('cvssMetricV2', [])
+        if cvss_v2:
+            cvss_data = cvss_v2[0].get('cvssData', {})
+            cvss_v2_score = cvss_data.get('baseScore', 0.0)
+        
+        # Create CVE record
+        vals = {
+            'cve_id': cve_id,
+            'cvss_v3_score': cvss_v3_score,
+            'cvss_v2_score': cvss_v2_score,
+            'description': description,
+            'published_date': published_date,
+            'last_modified': last_modified_date,
+            'vuln_status': 'Analyzed',  # Default status for API-created CVEs
+            'active': True,
+        }
+        
+        return self.create(vals)
+
+    def _update_from_api_data(self, api_cve_data):
+        """Update CVE from NVD API data format"""
+        for record in self:
+            # Extract updated data from API format
+            descriptions = api_cve_data.get('descriptions', [])
+            description = record.description
+            for desc in descriptions:
+                if desc.get('lang') == 'en':
+                    description = desc.get('value', description)
+                    break
+            
+            # Extract dates
+            last_modified_date_str = api_cve_data.get('lastModified')
+            last_modified_date = record.last_modified
+            if last_modified_date_str:
+                try:
+                    # Parse ISO format timestamp (e.g., '2021-08-26T15:15:06.993')
+                    from datetime import datetime
+                    last_modified_date = datetime.fromisoformat(last_modified_date_str.replace('Z', '+00:00'))
+                except Exception as e:
+                    _logger.warning(f"Failed to parse last modified date '{last_modified_date_str}': {e}")
+                    last_modified_date = record.last_modified
+            
+            # Extract CVSS scores
+            cvss_v3_score = record.cvss_v3_score
+            cvss_v2_score = record.cvss_v2_score
+            
+            metrics = api_cve_data.get('metrics', {})
+            
+            # CVSS v3.1
+            cvss_v31 = metrics.get('cvssMetricV31', [])
+            if cvss_v31:
+                cvss_data = cvss_v31[0].get('cvssData', {})
+                cvss_v3_score = cvss_data.get('baseScore', cvss_v3_score)
+            
+            # CVSS v3.0
+            if cvss_v3_score == record.cvss_v3_score:
+                cvss_v30 = metrics.get('cvssMetricV30', [])
+                if cvss_v30:
+                    cvss_data = cvss_v30[0].get('cvssData', {})
+                    cvss_v3_score = cvss_data.get('baseScore', cvss_v3_score)
+            
+            # CVSS v2
+            cvss_v2 = metrics.get('cvssMetricV2', [])
+            if cvss_v2:
+                cvss_data = cvss_v2[0].get('cvssData', {})
+                cvss_v2_score = cvss_data.get('baseScore', cvss_v2_score)
+            
+            # Update record
+            record.write({
+                'cvss_v3_score': cvss_v3_score,
+                'cvss_v2_score': cvss_v2_score,
+                'description': description,
+                'last_modified': last_modified_date,
+                'sync_date': fields.Datetime.now(),
+            })
+    
+    @api.model
+    def create_from_webhook(self, webhook_data):
+        """Create CVE from NVD webhook data"""
+        cve_id = webhook_data.get('cveId')
+        if not cve_id:
+            raise ValueError("Missing cveId in webhook data")
+        
+        # Extract CVSS scores
+        cvss_v3_score = 0.0
+        cvss_v2_score = 0.0
+        
+        base_metric_v3 = webhook_data.get('baseMetricV3', {})
+        if base_metric_v3:
+            cvss_v3 = base_metric_v3.get('cvssV3', {})
+            cvss_v3_score = cvss_v3.get('baseScore', 0.0)
+        
+        base_metric_v2 = webhook_data.get('baseMetricV2', {})
+        if base_metric_v2:
+            cvss_v2 = base_metric_v2.get('cvssV2', {})
+            cvss_v2_score = cvss_v2.get('baseScore', 0.0)
+        
+        # Create CVE record
+        vals = {
+            'cve_id': cve_id,
+            'cvss_v3_score': cvss_v3_score,
+            'cvss_v2_score': cvss_v2_score,
+            'description': webhook_data.get('description', ''),
+            'published_date': self._parse_webhook_date(webhook_data.get('publishedDate')),
+            'last_modified': self._parse_webhook_date(webhook_data.get('lastModifiedDate')),
+            'vuln_status': 'Analyzed',  # Webhooks are for published CVEs
+            'active': True,
+        }
+        
+        return self.create(vals)
+
+    def _update_from_webhook(self, webhook_data):
+        """Update CVE from NVD webhook data"""
+        for record in self:
+            # Extract updated data
+            cvss_v3_score = 0.0
+            cvss_v2_score = 0.0
+            
+            base_metric_v3 = webhook_data.get('baseMetricV3', {})
+            if base_metric_v3:
+                cvss_v3 = base_metric_v3.get('cvssV3', {})
+                cvss_v3_score = cvss_v3.get('baseScore', 0.0)
+            
+            base_metric_v2 = webhook_data.get('baseMetricV2', {})
+            if base_metric_v2:
+                cvss_v2 = base_metric_v2.get('cvssV2', {})
+                cvss_v2_score = cvss_v2.get('baseScore', 0.0)
+            
+            # Update record
+            record.write({
+                'cvss_v3_score': cvss_v3_score,
+                'cvss_v2_score': cvss_v2_score,
+                'description': webhook_data.get('description', record.description),
+                'last_modified': self._parse_webhook_date(webhook_data.get('lastModifiedDate')),
+            })
+
+    def _parse_webhook_date(self, date_str):
+        """Parse webhook date string to datetime object"""
+        if not date_str:
+            return None
+        try:
+            # Parse ISO format timestamp (e.g., '2021-08-26T15:15:06.993')
+            from datetime import datetime
+            return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+        except Exception as e:
+            _logger.warning(f"Failed to parse webhook date '{date_str}': {e}")
+            return None

@@ -1020,3 +1020,191 @@ class VulnFwNvdApiConnector(models.Model):
         except Exception as e:
             _logger.error("Simple CVE sync failed: %s", str(e))
             raise UserError(_("Simple CVE sync failed: %s") % str(e))
+
+    def register_webhook_for_cpe(self, cpe_uri, webhook_url=None):
+        """Register a webhook subscription with NVD for CPE updates
+        
+        Note: NVD does not currently support webhook subscriptions. This method
+        exists for future compatibility but currently just logs the attempt.
+        
+        Args:
+            cpe_uri (str): The CPE URI to subscribe to
+            webhook_url (str): The webhook URL to receive notifications. If None, uses default.
+            
+        Returns:
+            dict: Mock registration response (NVD doesn't support webhooks)
+        """
+        self.ensure_one()
+        
+        _logger.info(f"🔗 NVD webhook registration attempted for CPE: {cpe_uri}")
+        _logger.warning("⚠️ NVD does not currently support webhook subscriptions. Using manual sync instead.")
+        
+        # NVD doesn't support webhooks, so we return a mock success response
+        # This allows the subscription process to continue without errors
+        return {
+            'success': False,
+            'subscription_id': None,
+            'cpe_uri': cpe_uri,
+            'webhook_url': webhook_url,
+            'message': 'NVD does not support webhook subscriptions. Manual sync will be used.',
+            'response': {
+                'status': 'not_supported',
+                'note': 'NVD API does not provide webhook subscription functionality'
+            }
+        }
+
+    def sync_vulnerabilities_for_cpe(self, cpe_dict):
+        """Sync vulnerabilities for a specific CPE dictionary entry
+        
+        Args:
+            cpe_dict: vuln.fw.nvd.cpe.dictionary record
+            
+        Returns:
+            dict: Sync results
+        """
+        self.ensure_one()
+        
+        if not cpe_dict or not cpe_dict.cpe_name:
+            return {
+                'success': False,
+                'error': 'Invalid CPE dictionary entry',
+                'vulnerabilities_found': 0,
+                'critical_vulnerabilities': 0
+            }
+        
+        _logger.info(f"🔄 Syncing vulnerabilities for CPE: {cpe_dict.cpe_name}")
+        
+        try:
+            # Use the CPE name to search for vulnerabilities
+            cpe_name = cpe_dict.cpe_name
+            
+            # Query NVD API for vulnerabilities matching this CPE
+            url = f"{self.api_url}/cves/2.0"
+            
+            params = {
+                'cpeName': cpe_name,
+                'resultsPerPage': 100,  # Reasonable limit for CPE-specific queries
+                'startIndex': 0
+            }
+            
+            headers = {'User-Agent': 'Odoo-VulnFwNvd/1.0'}
+            if self.api_key:
+                headers['apiKey'] = self.api_key
+            
+            _logger.debug(f"🌐 Querying NVD API: {url} with CPE: {cpe_name}")
+            
+            response = requests.get(url, headers=headers, params=params, timeout=30)
+            response.raise_for_status()
+            
+            data = response.json()
+            vulnerabilities = data.get('vulnerabilities', [])
+            
+            _logger.info(f"📊 Found {len(vulnerabilities)} vulnerabilities for CPE {cpe_name}")
+            
+            # Process vulnerabilities
+            processed_count = 0
+            critical_count = 0
+            high_count = 0
+            medium_count = 0
+            low_count = 0
+            cve_details = []
+            
+            for vuln_data in vulnerabilities:
+                try:
+                    cve_data = vuln_data.get('cve', {})
+                    cve_id = cve_data.get('id', '')
+                    
+                    # Create or update CVE record
+                    cve_dict = self.env['vuln.fw.nvd.cve.dictionary'].create_from_api_data(cve_data)
+                    
+                    # Note: CPE-CVE linking is handled by vuln_fw_nvd_cve_cpe module if installed
+                    # The base CVE dictionary model doesn't include cpe_ids field
+                    
+                    # Extract CVSS score and description
+                    metrics = cve_data.get('metrics', {})
+                    cvss_score = 0.0
+                    cvss_vector = ''
+                    severity = 'UNKNOWN'
+                    
+                    if metrics.get('cvssMetricV31'):
+                        cvss_data = metrics['cvssMetricV31'][0].get('cvssData', {})
+                        cvss_score = cvss_data.get('baseScore', 0.0)
+                        cvss_vector = cvss_data.get('vectorString', '')
+                        severity = cvss_data.get('baseSeverity', 'UNKNOWN')
+                    elif metrics.get('cvssMetricV30'):
+                        cvss_data = metrics['cvssMetricV30'][0].get('cvssData', {})
+                        cvss_score = cvss_data.get('baseScore', 0.0)
+                        cvss_vector = cvss_data.get('vectorString', '')
+                        severity = cvss_data.get('baseSeverity', 'UNKNOWN')
+                    elif metrics.get('cvssMetricV2'):
+                        cvss_data = metrics['cvssMetricV2'][0].get('cvssData', {})
+                        cvss_score = cvss_data.get('baseScore', 0.0)
+                        cvss_vector = cvss_data.get('vectorString', '')
+                    
+                    # Get English description
+                    descriptions = cve_data.get('descriptions', [])
+                    description = next((d['value'] for d in descriptions if d.get('lang') == 'en'), '')
+                    
+                    # Published and modified dates
+                    published_date = cve_data.get('published', '')
+                    modified_date = cve_data.get('lastModified', '')
+                    
+                    # Count by severity
+                    if cvss_score >= 9.0:
+                        critical_count += 1
+                    elif cvss_score >= 7.0:
+                        high_count += 1
+                    elif cvss_score >= 4.0:
+                        medium_count += 1
+                    elif cvss_score > 0:
+                        low_count += 1
+                    
+                    # Build CVE detail for remote API consumers
+                    cve_details.append({
+                        'cve_id': cve_id,
+                        'cvss_score': cvss_score,
+                        'cvss_vector': cvss_vector,
+                        'severity': severity,
+                        'description': description,
+                        'published_date': published_date,
+                        'modified_date': modified_date,
+                        'source': 'NVD',
+                        'cpe_name': cpe_name,
+                    })
+                    
+                    processed_count += 1
+                    
+                except Exception as vuln_error:
+                    _logger.warning(f"⚠️ Failed to process vulnerability: {vuln_error}")
+                    continue
+            
+            _logger.info(f"✅ Processed {processed_count} vulnerabilities ({critical_count} critical) for CPE {cpe_name}")
+            
+            return {
+                'success': True,
+                'vulnerabilities_found': processed_count,
+                'critical_vulnerabilities': critical_count,
+                'high_vulnerabilities': high_count,
+                'medium_vulnerabilities': medium_count,
+                'low_vulnerabilities': low_count,
+                'cve_details': cve_details,
+                'cpe_name': cpe_name,
+                'cpe_dictionary_id': cpe_dict.id
+            }
+            
+        except requests.RequestException as e:
+            _logger.error(f"❌ NVD API request failed for CPE {cpe_dict.cpe_name}: {e}")
+            return {
+                'success': False,
+                'error': f'API request failed: {str(e)}',
+                'vulnerabilities_found': 0,
+                'critical_vulnerabilities': 0
+            }
+        except Exception as e:
+            _logger.error(f"❌ Unexpected error syncing vulnerabilities for CPE {cpe_dict.cpe_name}: {e}")
+            return {
+                'success': False,
+                'error': f'Unexpected error: {str(e)}',
+                'vulnerabilities_found': 0,
+                'critical_vulnerabilities': 0
+            }
